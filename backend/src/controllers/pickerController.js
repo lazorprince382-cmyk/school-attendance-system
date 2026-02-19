@@ -10,10 +10,8 @@ const {
 } = require('../models/authorizedPickerModel');
 const { findChildById } = require('../models/childModel');
 
-const uploadsDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'pickers');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+const { getPickersUploadsDir } = require('../utils/uploadsPath');
+const uploadsDir = getPickersUploadsDir();
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),

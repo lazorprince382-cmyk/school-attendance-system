@@ -74,15 +74,19 @@ When this is done, your project lives on GitHub and Railway will use this repo n
 
 ## 6. Configure the app service (Root Directory and variables)
 
-**You must set Root Directory.** The app code lives in the `backend` folder; Railway must build from that folder. If you don’t set it, you’ll see “Error creating build plan with Railpack” or “can’t cd to backend”.
+**You must set Root Directory.** The app code lives in the `backend` folder; Railway must build from that folder. If you don’t set it, the build will show “Error creating build plan with Railpack” and the logs will list the whole repo (`backend/`, `frontend/`, `README.md`) instead of just the backend.
 
-1. Click the **app service** (the one from your repo, not the Postgres service).
-2. Open **Settings** (gear icon or “Settings” tab).
-3. In the **right sidebar** click **Source** (the first item). On the Source page, find **Root Directory** and set it to:
-   - If the **repo root** is the app folder (you pushed from `school-attendance-system`): set **`backend`** (no leading slash).
-   - If the **repo root** is the workspace (you pushed from `prince`): set **`school-attendance-system/backend`**.
-   Save if needed, then trigger a new deploy (e.g. **Deploy** or **Apply changes**).
-4. Open **Variables** and add:
+**How to set Root Directory (do this first):**
+1. Click the **school-attendance-system** service (the one with the GitHub icon, not “Postgres”).
+2. Open **Settings** (tab at the top).
+3. In the **right-hand sidebar**, click **Source** (first item in the list: Source, Networking, Scale, Build, Deploy, …).
+4. On the Source page, scroll if needed. Find the field **“Root Directory”** (or “Repository root” / “Build root”).
+5. In that field, type exactly: **`backend`** (no slash—just the word `backend`). If your repo root is the whole workspace (you pushed from `prince`), use **`school-attendance-system/backend`** instead.
+6. Save (or wait for auto-save). Then trigger a new deploy (**Deploy** or **Redeploy**).
+
+If you don’t see “Root Directory” on the Source page, scroll down; it may be below the repo/branch selector.
+
+7. Open **Variables** and add:
 
 | Variable         | Value |
 |------------------|--------|
@@ -93,7 +97,7 @@ When this is done, your project lives on GitHub and Railway will use this repo n
 
 Do **not** set `PORT` (Railway sets it). Leave `CORS_ORIGIN` for after you have the app URL (step 7).
 
-5. Save. Railway will redeploy with these variables.
+8. Save. Railway will redeploy when you change variables.
 
 ## 7. Get the app URL and set CORS
 

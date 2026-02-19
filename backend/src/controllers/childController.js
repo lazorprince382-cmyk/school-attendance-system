@@ -27,10 +27,8 @@ const uploadImages = multer({
   fileFilter: imageFilter,
 });
 
-const pickersUploadsDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'pickers');
-if (!fs.existsSync(pickersUploadsDir)) {
-  fs.mkdirSync(pickersUploadsDir, { recursive: true });
-}
+const { getPickersUploadsDir } = require('../utils/uploadsPath');
+const pickersUploadsDir = getPickersUploadsDir();
 
 function csvUploadMiddleware() {
   return uploadCsv.single('file');
@@ -177,22 +175,32 @@ async function registerChildWithPickers(req, res) {
 async function getChildByQr(req, res) {
   const { code } = req.query || {};
   if (!code) return res.status(400).json({ error: 'QR code is required' });
-  const child = await findChildByQrPayload(code);
-  if (!child) return res.status(404).json({ error: 'Child not found for QR code' });
-  const pickers = await getPickersByChildId(child.id);
-  const authorizedPickers = pickers.map((p, idx) => ({
-    id: p.id,
-    name: (p.name != null && String(p.name).trim() !== '') ? String(p.name).trim() : `Holder ${idx + 1}`,
-    relationship: p.relationship,
-    photoUrl: p.photo_url,
-  }));
-  return res.json({
-    id: child.id,
-    fullName: `${child.first_name} ${child.last_name}`,
-    className: child.class_name,
-    schoolName: 'Ocean of Knowledge School',
-    authorizedPickers,
-  });
+  try {
+    const child = await findChildByQrPayload(code);
+    if (!child) {
+      console.log('[by-qr] code=%s → child not in database', String(code).slice(0, 50));
+      return res.status(404).json({
+        error: 'Child not found for this QR code. Add this child (with 3 holder photos) in Admin Dashboard on this site, then generate and scan the QR here.',
+      });
+    }
+    const pickers = await getPickersByChildId(child.id);
+    const authorizedPickers = pickers.map((p, idx) => ({
+      id: p.id,
+      name: (p.name != null && String(p.name).trim() !== '') ? String(p.name).trim() : `Holder ${idx + 1}`,
+      relationship: p.relationship,
+      photoUrl: p.photo_url,
+    }));
+    return res.json({
+      id: child.id,
+      fullName: `${child.first_name} ${child.last_name}`,
+      className: child.class_name,
+      schoolName: 'Ocean of Knowledge School',
+      authorizedPickers,
+    });
+  } catch (err) {
+    console.error('[by-qr] lookup failed for code=%s', String(code).slice(0, 50), err);
+    return res.status(500).json({ error: 'Database error. Please try again.' });
+  }
 }
 
 async function updateChildById(req, res) {

@@ -258,6 +258,7 @@
 
   logoutBtn.addEventListener('click', logout);
 
+  /** Returns { child } on success, or { error, status } on failure so UI can show the right message. */
   async function fetchChildByQr(qrText) {
     try {
       const resp = await fetch(
@@ -268,13 +269,17 @@
           },
         }
       );
-      if (!resp.ok) {
-        return null;
+      const body = await resp.json().catch(() => ({}));
+      if (resp.ok) {
+        return { child: body };
       }
-      return resp.json();
+      return {
+        error: body.error || resp.statusText || 'Request failed',
+        status: resp.status,
+      };
     } catch (err) {
       console.error('fetchChildByQr error', err);
-      return null;
+      return { error: 'Network or server error. Check connection and try again.', status: 0 };
     }
   }
 
@@ -365,14 +370,23 @@
     setChildDetails(null, qrText);
     renderPickers([]);
 
-    const child = await fetchChildByQr(qrText);
-    if (!child) {
-      setStatus('Child not found for this QR.', 'error');
+    const result = await fetchChildByQr(qrText);
+    if (result.child) {
+      lastChild = result.child;
+      setChildDetails(result.child, qrText);
+      renderPickers(result.child.authorizedPickers || []);
+    } else {
+      const msg =
+        result.status === 401
+          ? 'Session expired. Please log in again.'
+          : result.status === 403
+            ? 'You do not have scanner access.'
+            : result.error || 'Child not found for this QR.';
+      setStatus(msg, 'error');
+      setChildDetails(null, qrText);
+      renderPickers([]);
       return;
     }
-    lastChild = child;
-    setChildDetails(child, qrText);
-    renderPickers(child.authorizedPickers || []);
     setReleaseButtonEnabled(!!lastChild);
     setStatus('Select who is picking, then confirm release.', 'info');
     enterConfirmMode();

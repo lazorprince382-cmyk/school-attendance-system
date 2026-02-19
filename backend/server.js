@@ -72,9 +72,9 @@ app.use(
   express.static(path.join(__dirname, '..', 'frontend', 'admin-dashboard'))
 );
 
-// Uploaded picker photos (gate comparison)
-const uploadsDir = path.join(__dirname, 'public', 'uploads', 'pickers');
-app.use('/uploads/pickers', express.static(uploadsDir));
+// Uploaded picker photos (gate comparison). Use UPLOADS_DIR for persistent disk on Render.
+const { getPickersUploadsDir } = require('./src/utils/uploadsPath');
+app.use('/uploads/pickers', express.static(getPickersUploadsDir()));
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'School attendance backend running' });

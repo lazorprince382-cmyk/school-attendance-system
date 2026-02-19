@@ -33,9 +33,10 @@ npm run migrate
 
 Run after cloning and whenever new migration files are added.
 
-## Deploy on Railway
+## Deploy
 
-For step-by-step hosting on Railway (account, Postgres, env vars, migrations, custom domain), see **[DEPLOY-RAILWAY.md](DEPLOY-RAILWAY.md)**.
+- **Render:** Step-by-step guide (recommended if Railway gave trouble): **[DEPLOY-RENDER.md](DEPLOY-RENDER.md)**.
+- **Railway:** **[DEPLOY-RAILWAY.md](DEPLOY-RAILWAY.md)** (account, Postgres, Root Directory, env vars, migrations, custom domain).
 
 ## Running the app
 
