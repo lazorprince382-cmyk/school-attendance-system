@@ -37,11 +37,12 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", 'https://cdnjs.cloudflare.com'],
+        scriptSrc: ["'self'", "blob:", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://cdnjs.cloudflare.com'],
         imgSrc: ["'self'", 'data:', 'https:'],
         fontSrc: ["'self'", 'https://cdnjs.cloudflare.com'],
         connectSrc: ["'self'"],
+        workerSrc: ["'self'", "blob:"],
       },
     },
   })
