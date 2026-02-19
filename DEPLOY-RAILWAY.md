@@ -74,11 +74,14 @@ When this is done, your project lives on GitHub and Railway will use this repo n
 
 ## 6. Configure the app service (Root Directory and variables)
 
+**You must set Root Directory.** The app code lives in the `backend` folder; Railway must build from that folder. If you don’t set it, you’ll see “Error creating build plan with Railpack” or “can’t cd to backend”.
+
 1. Click the **app service** (the one from your repo, not the Postgres service).
-2. Open **Settings**.
-3. Set **Root Directory**:
-   - If the **repo root** is the app folder (you pushed from `school-attendance-system`): set **`backend`**.
+2. Open **Settings** (gear icon or “Settings” tab).
+3. In the **right sidebar** click **Source** (the first item). On the Source page, find **Root Directory** and set it to:
+   - If the **repo root** is the app folder (you pushed from `school-attendance-system`): set **`backend`** (no leading slash).
    - If the **repo root** is the workspace (you pushed from `prince`): set **`school-attendance-system/backend`**.
+   Save if needed, then trigger a new deploy (e.g. **Deploy** or **Apply changes**).
 4. Open **Variables** and add:
 
 | Variable         | Value |
@@ -155,3 +158,13 @@ When you buy a domain from any registrar:
 - [ ] `CORS_ORIGIN` updated to include the new domain  
 
 If a step fails, check the **Deploy logs** and **Service logs** for that service in the Railway dashboard.
+
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|--------|-----|
+| **“Error creating build plan with Railpack”**, **“Railpack could not determine how to build”**, or **“can’t cd to backend”** | You must set **Root Directory** so the build runs from the `backend` folder. In the app service go to **Settings** → **Source** (right sidebar) → **Root Directory** = **`backend`**. Save and redeploy. Do not rely on a root-level railpack that uses `cd backend`; the build context may not include it. |
+| **Variables not loading** | Ensure `NODE_ENV` = `production` and `DATABASE_URL` is a **reference** to the Postgres service’s `DATABASE_URL` (use “Add reference” / “Variable reference”), not a literal string. |
+| **App crashes or 503** | Check **Deploy logs** and **Service logs**. Often caused by missing `JWT_SECRET` (must be 16+ characters in production) or wrong `DATABASE_URL`. |
