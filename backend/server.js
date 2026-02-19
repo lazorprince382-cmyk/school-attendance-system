@@ -32,7 +32,20 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 app.use(cors(corsOptions));
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", 'https://cdnjs.cloudflare.com'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://cdnjs.cloudflare.com'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        fontSrc: ["'self'", 'https://cdnjs.cloudflare.com'],
+        connectSrc: ["'self'"],
+      },
+    },
+  })
+);
 app.use(express.json());
 app.use(morgan('dev'));
 
