@@ -1,0 +1,11 @@
+{
+  "provider": "node",
+  "steps": {
+    "install": {
+      "commands": ["cd backend && npm install"]
+    }
+  },
+  "deploy": {
+    "startCommand": "cd backend && node server.js"
+  }
+}
