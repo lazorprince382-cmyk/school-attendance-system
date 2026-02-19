@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard - Attendance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1e40af" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="top-header">
+        <div class="brand">
+          <img src="./images/ocean-badge.png" alt="Ocean of Knowledge School" class="brand-badge" />
+          <div class="brand-text">
+            <div class="brand-name">Ocean of Knowledge School</div>
+            <div class="brand-subtitle">Attendance Admin Dashboard</div>
+          </div>
+        </div>
+        <div class="user-pill" id="admin-user-label">Logged in</div>
+      </header>
+
+      <nav class="tabs">
+        <div class="tab active" data-tab="children">Children & QR Codes</div>
+        <div class="tab" data-tab="attendance">Today departures</div>
+        <div class="tab" data-tab="history">History departures</div>
+        <div class="tab" data-tab="teachers">Teachers</div>
+        <div class="tab" data-tab="export">Export</div>
+      </nav>
+
+      <main>
+        <div class="welcome-banner" id="welcome-banner">
+          <span class="welcome-text">Welcome back, <span id="welcome-name">—</span>!</span>
+          <span class="welcome-sub" id="welcome-sub">Ready to make today smooth?</span>
+        </div>
+        <section id="tab-children" class="active">
+          <div class="two-column">
+          <div class="column">
+            <div class="card">
+              <h2>Register new child</h2>
+              <p class="small">
+                Add a learner with their full name, class, parent phone, and three holder photos. The QR code is generated after registration; gate staff will see these photos when scanning.
+              </p>
+              <form id="register-child-form">
+                <div class="grid">
+                  <div class="full-width">
+                    <label for="child-full-name-input">Child’s full name</label>
+                    <input id="child-full-name-input" type="text" placeholder="e.g. John Okello" required />
+                  </div>
+                  <div>
+                    <label for="child-class-input">Class</label>
+                    <input id="child-class-input" type="text" placeholder="e.g. P3" />
+                  </div>
+                  <div>
+                    <label for="child-parent-phone-input">Parent’s phone number</label>
+                    <input id="child-parent-phone-input" type="tel" placeholder="+2567XXXXXXXX" />
+                  </div>
+                  <div class="full-width">
+                    <label>Holder 1 photo</label>
+                    <input type="file" id="holder-photo-1" accept="image/*" required />
+                  </div>
+                  <div class="full-width">
+                    <label>Holder 2 photo</label>
+                    <input type="file" id="holder-photo-2" accept="image/*" required />
+                  </div>
+                  <div class="full-width">
+                    <label>Holder 3 photo</label>
+                    <input type="file" id="holder-photo-3" accept="image/*" required />
+                  </div>
+                </div>
+                <div class="mt">
+                  <button class="btn-primary" type="submit">Register child</button>
+                </div>
+              </form>
+              <div class="status" id="register-child-status"></div>
+            </div>
+          </div>
+
+          <div class="column">
+            <div class="card">
+              <div class="card-header-row">
+                <div>
+                  <h2>Children & QR Codes</h2>
+                  <p class="small">
+                    One QR per learner. Gate staff scan it once to see this child and their three holder photos.
+                  </p>
+                </div>
+                <div class="header-actions">
+                  <button class="btn-secondary" id="refresh-children-btn" type="button">
+                    Refresh
+                  </button>
+                  <button class="btn-secondary" id="generate-qr-btn" type="button">
+                    Generate QRs
+                  </button>
+                  <button class="btn-secondary" id="show-hidden-qr-btn" type="button" disabled>
+                    Show hidden
+                  </button>
+                </div>
+              </div>
+              <div class="small mt">
+                Each learner has a single QR (id + name). Scanning it loads the child and their three photos from the database.
+              </div>
+              <div class="qr-grid" id="qr-grid"></div>
+            </div>
+          </div>
+          </div>
+          <div class="card children-list-card">
+            <h2>All registered children</h2>
+            <p class="small">View and edit all learners (including those registered earlier). Use Edit to change details or replace holder photos. Delete only hides the row; use "Show hidden" to restore.</p>
+            <div class="header-actions mt" style="margin-bottom: 0.5rem;">
+              <button class="btn-secondary" id="show-hidden-table-btn" type="button" disabled>Show hidden</button>
+            </div>
+            <div class="table-wrap">
+              <table id="children-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Full name</th>
+                    <th>Class</th>
+                    <th>Parent phone</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="children-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-attendance">
+          <div class="card">
+            <h2>Today departures</h2>
+            <button class="btn-secondary" id="refresh-attendance-btn" type="button">
+              Refresh
+            </button>
+            <div class="small" id="attendance-summary"></div>
+            <div class="table-wrap">
+              <table id="attendance-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Child</th>
+                    <th>Class</th>
+                    <th>Teacher</th>
+                    <th>Holder who picked</th>
+                    <th>Action</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-history">
+          <div class="card">
+            <h2>History departures</h2>
+            <p class="small">Open a date below to view that day’s departure table. Each date is like a file you can open and export.</p>
+            <button class="btn-secondary" id="refresh-history-dates-btn" type="button">Refresh list</button>
+            <div class="small mt" id="history-dates-summary"></div>
+            <div class="history-dates-list" id="history-dates-list"></div>
+            <div class="mt" id="history-table-wrap" style="display: none;">
+              <h3 id="history-table-title"></h3>
+              <div class="table-wrap">
+                <table id="history-attendance-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Child</th>
+                      <th>Class</th>
+                      <th>Teacher</th>
+                      <th>Holder who picked</th>
+                      <th>Action</th>
+                      <th>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody id="history-attendance-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-teachers">
+          <div class="card">
+            <h2>Manage Teachers</h2>
+            <form id="add-teacher-form">
+              <div class="grid">
+                <div>
+                  <label for="teacher-name-input">Name</label>
+                  <input id="teacher-name-input" type="text" required />
+                </div>
+                <div>
+                  <label for="teacher-phone-input">Phone</label>
+                  <input id="teacher-phone-input" type="tel" required />
+                </div>
+                <div>
+                  <label for="teacher-pin-input">4-digit PIN</label>
+                  <input id="teacher-pin-input" type="text" maxlength="4" required />
+                </div>
+                <div>
+                  <label for="teacher-access-input">Access</label>
+                  <select id="teacher-access-input">
+                    <option value="both">Both (Scanner + Admin)</option>
+                    <option value="scanner">Scanner only</option>
+                    <option value="admin">Admin only</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mt">
+                <button class="btn-primary" type="submit">Add Teacher</button>
+              </div>
+            </form>
+            <div class="status" id="teachers-status"></div>
+          </div>
+
+          <div class="card">
+            <h2>Teachers List</h2>
+            <button class="btn-secondary" id="refresh-teachers-btn" type="button">
+              Refresh
+            </button>
+            <div class="table-wrap">
+              <table id="teachers-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Access</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-export">
+          <div class="card">
+            <h2>Export Attendance</h2>
+            <p class="small">
+              Export all attendance data as CSV, or pick a date from history to export that day only.
+              Files open in Excel or Google Sheets.
+            </p>
+            <button class="btn-primary" id="export-attendance-btn" type="button">
+              Download all (full CSV)
+            </button>
+          </div>
+          <div class="card mt">
+            <h2>Export from history</h2>
+            <p class="small">Export a single day’s departures. Select a date that has records (same list as History departures).</p>
+            <div class="history-dates-list" id="export-history-dates-list"></div>
+            <p class="small mt" id="export-history-hint">Load the Export tab to see dates.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-overlay" id="edit-child-modal" aria-hidden="true">
+      <div class="modal-box">
+        <h2>Edit child</h2>
+        <form id="edit-child-form">
+          <div class="grid">
+            <div class="full-width">
+              <label for="edit-child-full-name">Full name</label>
+              <input id="edit-child-full-name" type="text" required />
+            </div>
+            <div>
+              <label for="edit-child-class">Class</label>
+              <input id="edit-child-class" type="text" />
+            </div>
+            <div>
+              <label for="edit-child-parent-phone">Parent phone</label>
+              <input id="edit-child-parent-phone" type="tel" />
+            </div>
+          </div>
+          <div class="mt">
+            <label class="block-label">Holder photos and names</label>
+            <p class="small" style="margin-bottom: 0.5rem;">Names show under each photo when scanning. You can edit names here or replace a photo (filename becomes the name).</p>
+            <div class="holder-photos-edit" id="holder-photos-edit">
+              <div class="holder-edit-slot" data-slot="0">
+                <div class="holder-thumb-wrap"><img class="holder-thumb" alt="Holder 1" /></div>
+                <label class="small" for="holder-name-0">Holder 1 name</label>
+                <input type="text" class="holder-name-input" id="holder-name-0" placeholder="e.g. Sharon" data-slot="0" />
+                <input type="file" class="holder-replace-input" accept="image/*" data-slot="0" />
+              </div>
+              <div class="holder-edit-slot" data-slot="1">
+                <div class="holder-thumb-wrap"><img class="holder-thumb" alt="Holder 2" /></div>
+                <label class="small" for="holder-name-1">Holder 2 name</label>
+                <input type="text" class="holder-name-input" id="holder-name-1" placeholder="e.g. John" data-slot="1" />
+                <input type="file" class="holder-replace-input" accept="image/*" data-slot="1" />
+              </div>
+              <div class="holder-edit-slot" data-slot="2">
+                <div class="holder-thumb-wrap"><img class="holder-thumb" alt="Holder 3" /></div>
+                <label class="small" for="holder-name-2">Holder 3 name</label>
+                <input type="text" class="holder-name-input" id="holder-name-2" placeholder="e.g. Mary" data-slot="2" />
+                <input type="file" class="holder-replace-input" accept="image/*" data-slot="2" />
+              </div>
+            </div>
+          </div>
+          <div class="modal-actions mt">
+            <button type="button" class="btn-secondary" id="edit-child-cancel">Cancel</button>
+            <button type="submit" class="btn-primary">Save</button>
+          </div>
+        </form>
+        <div class="status" id="edit-child-status"></div>
+      </div>
+    </div>
+
+    <script src="./dashboard.js"></script>
+  </body>
+  </html>
+

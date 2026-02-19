@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>QR Generator - Attendance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div class="title">QR Generator</div>
+      </header>
+      <main>
+        <div class="card">
+          <h2>Generate Single Child QR</h2>
+          <p class="small">Enter the child’s registration info. The QR will encode this data (unique per child).</p>
+          <div class="mt">
+            <label for="child-id-input">Child ID</label>
+            <input id="child-id-input" type="number" placeholder="e.g. 2" />
+          </div>
+          <div class="mt">
+            <label for="child-fullname-input">Full name</label>
+            <input id="child-fullname-input" type="text" placeholder="e.g. Joan Nampeera" />
+          </div>
+          <div class="mt">
+            <label for="child-class-input">Class</label>
+            <input id="child-class-input" type="text" placeholder="e.g. P1" />
+          </div>
+          <div class="mt">
+            <label for="external-id-input">Admission / Index No.</label>
+            <input id="external-id-input" type="text" placeholder="Optional" />
+          </div>
+          <div class="mt">
+            <button class="btn-primary" id="generate-btn" type="button">Generate QR</button>
+          </div>
+          <div class="mt" id="qr-container"></div>
+        </div>
+      </main>
+    </div>
+    <script>
+      (function () {
+        const childIdInput = document.getElementById('child-id-input');
+        const fullNameInput = document.getElementById('child-fullname-input');
+        const classInput = document.getElementById('child-class-input');
+        const externalIdInput = document.getElementById('external-id-input');
+        const generateBtn = document.getElementById('generate-btn');
+        const qrContainer = document.getElementById('qr-container');
+
+        generateBtn.addEventListener('click', () => {
+          const childId = childIdInput.value.trim();
+          const fullName = fullNameInput.value.trim();
+          const cls = classInput.value.trim();
+          const ext = externalIdInput.value.trim();
+          if (!childId) {
+            alert('Please enter child ID');
+            return;
+          }
+          qrContainer.innerHTML = '';
+          const qrDiv = document.createElement('div');
+          qrDiv.style.width = '200px';
+          qrDiv.style.height = '200px';
+          qrContainer.appendChild(qrDiv);
+          const qrData = String(Number(childId));
+          // eslint-disable-next-line no-new
+          new QRCode(qrDiv, {
+            text: qrData,
+            width: 200,
+            height: 200,
+            correctLevel: typeof QRCode !== 'undefined' && QRCode.CorrectLevel ? QRCode.CorrectLevel.L : 0,
+          });
+        });
+      })();
+    </script>
+  </body>
+  </html>
+

@@ -1,0 +1,3 @@
+# Railway deployment (optional; Root Directory must point to this backend folder)
+[deploy]
+startCommand = "node server.js"

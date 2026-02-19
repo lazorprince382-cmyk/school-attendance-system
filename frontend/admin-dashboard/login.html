@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Login - Ocean of Knowledge School</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1e40af" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="login-page">
+    <div class="login-layout">
+      <div class="login-badge-wrap">
+        <img src="./images/ocean-badge.png" alt="Ocean of Knowledge School" class="login-badge" />
+      </div>
+      <div class="login-glow-wrap">
+        <div class="login-form-wrap">
+          <h1 class="login-title">LOGIN</h1>
+          <p class="login-subtitle">Get started with Ocean of Knowledge School.</p>
+          <form id="login-form" class="login-form" autocomplete="off">
+            <div class="login-field">
+              <label for="phone-input">Phone</label>
+              <input id="phone-input" type="tel" placeholder="Phone number" required autocomplete="off" />
+            </div>
+            <div class="login-field">
+              <label for="pin-input">4-digit PIN</label>
+              <input id="pin-input" type="password" placeholder="PIN" maxlength="4" required autocomplete="off" />
+            </div>
+            <div class="login-field">
+              <label class="login-field-label">Where do you want to go after login?</label>
+              <div class="login-option-cards">
+                <label class="login-option-card">
+                  <input type="radio" name="target" value="teacher" checked />
+                  <span class="option-icon">📱</span>
+                  <span class="option-title">Teacher QR Scanner</span>
+                  <span class="option-desc">Scan & release at the gate</span>
+                </label>
+                <label class="login-option-card">
+                  <input type="radio" name="target" value="admin" />
+                  <span class="option-icon">⚙️</span>
+                  <span class="option-title">Admin Dashboard</span>
+                  <span class="option-desc">Manage children & attendance</span>
+                </label>
+              </div>
+            </div>
+            <button class="login-btn" type="submit">Login Now</button>
+            <div class="status" id="login-status"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="./login.js"></script>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "name": "school-attendance-backend",
+  "version": "1.0.0",
+  "description": "Backend for Uganda school attendance system (QR, admin dashboard)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "set NODE_ENV=development&& nodemon server.js",
+    "migrate": "node scripts/run-migration.js",
+    "seed:teacher": "set NODE_ENV=development&& node scripts/seed-teacher.js",
+    "generate-cert": "node scripts/generate-cert.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "selfsigned": "^2.4.1"
+  }
+}

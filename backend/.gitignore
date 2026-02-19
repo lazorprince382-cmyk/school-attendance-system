@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+
+# Generated HTTPS certificate (run: npm run generate-cert)
+cert/
+
+# Uploaded picker photos (runtime data; don't commit)
+public/uploads/
+
+# Logs
+*.log
+npm-debug.log*

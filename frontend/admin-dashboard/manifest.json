@@ -1,0 +1,11 @@
+{
+  "name": "Attendance Admin",
+  "short_name": "Admin",
+  "description": "Ocean of Knowledge School - Attendance Admin Dashboard",
+  "start_url": "/admin/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#1e40af",
+  "icons": []
+}

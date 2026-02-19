@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Teacher QR Scanner - Attendance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#6b21a8" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="top-header">
+        <div class="teacher-brand">
+          <img src="/admin/images/ocean-badge.png" alt="Ocean of Knowledge School" class="teacher-badge-img" />
+          <div class="teacher-text">
+            <span class="school-name">Ocean of Knowledge School</span>
+            <span class="subtitle">Departure / Release Scanner</span>
+          </div>
+        </div>
+        <div class="teacher-meta">
+          <span class="teacher-name" id="teacher-name">Teacher</span>
+          <button class="logout-btn" id="logout-btn" type="button">Logout</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="scanner-container">
+          <div id="qr-reader"></div>
+          <p class="scan-hint" aria-hidden="true">Hold the card close so the QR is clear in the frame</p>
+          <div class="overlay-message" id="overlay-message">Allow camera access to start scanning</div>
+        </section>
+
+        <section class="bottom-panel">
+          <div class="child-details" id="child-details">
+            <div class="child-details-title">Child</div>
+            <div class="child-main-line" id="child-main-line">Waiting for QR scan...</div>
+            <div class="child-secondary-line" id="child-secondary-line">-</div>
+          </div>
+
+          <div class="authorized-pickers" id="authorized-pickers">
+            <div class="pickers-title">Authorized pickers</div>
+            <p class="pickers-hint">Select who is picking, then confirm release.</p>
+            <div class="pickers-row" id="pickers-row">
+              <div class="picker-slot"><div class="picker-photo-wrap"><span class="picker-placeholder">No photo</span></div><div class="picker-name">-</div><div class="picker-relationship">-</div><button type="button" class="picker-select-btn" aria-label="Select this person as picker">Select</button></div>
+              <div class="picker-slot"><div class="picker-photo-wrap"><span class="picker-placeholder">No photo</span></div><div class="picker-name">-</div><div class="picker-relationship">-</div><button type="button" class="picker-select-btn" aria-label="Select this person as picker">Select</button></div>
+              <div class="picker-slot"><div class="picker-photo-wrap"><span class="picker-placeholder">No photo</span></div><div class="picker-name">-</div><div class="picker-relationship">-</div><button type="button" class="picker-select-btn" aria-label="Select this person as picker">Select</button></div>
+            </div>
+          </div>
+
+          <div class="buttons-row">
+            <button class="action-btn btn-release" id="btn-release" type="button" disabled>Confirm release</button>
+            <button class="action-btn btn-emergency-release" id="btn-emergency-release" type="button" disabled>Emergency release</button>
+          </div>
+
+          <div class="status-row">
+            <span class="status-message info" id="status-message">Point camera at QR code.</span>
+            <button type="button" class="btn-scan-again" id="btn-scan-again">Scan another</button>
+            <label class="btn-scan-file">
+              <input type="file" id="scan-file-input" accept="image/*" hidden />
+              Scan from image
+            </label>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="picker-zoom-overlay" id="picker-zoom-overlay" role="button" tabindex="0" aria-label="Close zoom">
+      <div class="picker-zoom-inner">
+        <img id="picker-zoom-img" src="" alt="" class="picker-zoom-img" />
+        <div class="picker-zoom-label" id="picker-zoom-label"></div>
+        <div class="picker-zoom-hint">Tap anywhere to close</div>
+      </div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+  </html>
+

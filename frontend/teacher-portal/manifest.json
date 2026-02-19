@@ -1,0 +1,11 @@
+{
+  "name": "Attendance Scanner",
+  "short_name": "Scanner",
+  "description": "Ocean of Knowledge School - Departure / Release Scanner",
+  "start_url": "/teacher/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#6b21a8",
+  "icons": []
+}
