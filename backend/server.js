@@ -69,6 +69,20 @@ const apiLimiter = rateLimit({
 app.use('/api/teachers/login', loginLimiter);
 app.use('/api', apiLimiter);
 
+// Serve QR scanner script from same origin so CSP never blocks it (camera works like scanqr.org)
+const QR_SCRIPT_URL = 'https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js';
+app.get('/teacher/html5-qrcode.min.js', (req, res) => {
+  const lib = require('https');
+  lib.get(QR_SCRIPT_URL, (upstream) => {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    upstream.pipe(res);
+  }).on('error', (err) => {
+    console.error('QR script proxy error', err.message);
+    res.status(502).send('/* proxy error */');
+  });
+});
+
 // Static frontend for teacher portal and admin dashboard
 app.use(
   '/teacher',
