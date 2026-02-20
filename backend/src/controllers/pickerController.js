@@ -43,11 +43,12 @@ async function getPickers(req, res) {
   const child = await findChildById(childId);
   if (!child) return res.status(404).json({ error: 'Child not found' });
   const pickers = await getPickersByChildId(childId);
+  const norm = (url) => (url && typeof url === 'string' && !url.startsWith('http') && !url.startsWith('/') ? '/' + url : url);
   const list = pickers.map((p, idx) => ({
     id: p.id,
     name: (p.name != null && String(p.name).trim() !== '') ? String(p.name).trim() : `Holder ${idx + 1}`,
     relationship: p.relationship,
-    photoUrl: p.photo_url,
+    photoUrl: norm(p.photo_url) || p.photo_url,
     sortOrder: p.sort_order,
   }));
   return res.json(list);

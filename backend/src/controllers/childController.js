@@ -184,11 +184,12 @@ async function getChildByQr(req, res) {
       });
     }
     const pickers = await getPickersByChildId(child.id);
+    const norm = (url) => (url && typeof url === 'string' && !url.startsWith('http') && !url.startsWith('/') ? '/' + url : url);
     const authorizedPickers = pickers.map((p, idx) => ({
       id: p.id,
       name: (p.name != null && String(p.name).trim() !== '') ? String(p.name).trim() : `Holder ${idx + 1}`,
       relationship: p.relationship,
-      photoUrl: p.photo_url,
+      photoUrl: norm(p.photo_url) || p.photo_url,
     }));
     return res.json({
       id: child.id,

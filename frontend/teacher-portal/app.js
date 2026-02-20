@@ -147,11 +147,18 @@
     });
   }
 
+  function fullPhotoUrl(photoUrl) {
+    if (!photoUrl || typeof photoUrl !== 'string') return '';
+    if (photoUrl.startsWith('http')) return photoUrl;
+    const base = (window.location.origin || '').replace(/\/$/, '');
+    const path = photoUrl.startsWith('/') ? photoUrl : '/' + photoUrl;
+    return base ? base + path : photoUrl;
+  }
+
   function renderPickers(authorizedPickers) {
     selectedPickerId = null;
     const slots = pickersRow.querySelectorAll('.picker-slot');
     const list = authorizedPickers || [];
-    const baseUrl = window.location.origin;
     for (let i = 0; i < 3; i += 1) {
       const slot = slots[i];
       if (!slot) continue;
@@ -163,13 +170,11 @@
       const picker = list[i];
       if (picker) {
         if (picker.id != null) slot.setAttribute('data-picker-id', String(picker.id));
-        const photoUrl = picker.photoUrl
-          ? (picker.photoUrl.startsWith('http') ? picker.photoUrl : baseUrl + picker.photoUrl)
-          : '';
+        const photoUrl = fullPhotoUrl(picker.photoUrl);
         photoWrap.innerHTML = '';
         if (photoUrl) {
           const img = document.createElement('img');
-          img.src = photoUrl;
+          img.src = photoUrl + (photoUrl.indexOf('?') === -1 ? '?v=' + (picker.id || i) : '');
           img.alt = picker.name || 'Picker';
           img.className = 'picker-photo';
           img.onerror = () => {

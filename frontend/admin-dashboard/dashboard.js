@@ -414,14 +414,20 @@
       .then((pickers) => {
         const sorted = (pickers || []).slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
         editingPickers = sorted;
-        const baseUrl = window.location.origin;
         const slots = holderPhotosEdit.querySelectorAll('.holder-edit-slot');
+        const origin = (window.location.origin || '').replace(/\/$/, '');
+        const toFullUrl = (url) => {
+          if (!url || typeof url !== 'string') return '';
+          if (url.startsWith('http')) return url;
+          const path = url.startsWith('/') ? url : '/' + url;
+          return origin ? origin + path : url;
+        };
         sorted.forEach((p, i) => {
           if (slots[i]) {
             slots[i].setAttribute('data-picker-id', p.id);
             const thumb = slots[i].querySelector('.holder-thumb');
             if (thumb && p.photoUrl) {
-              thumb.src = p.photoUrl.startsWith('http') ? p.photoUrl : baseUrl + p.photoUrl;
+              thumb.src = toFullUrl(p.photoUrl) + '?v=' + (p.id || i);
               thumb.style.display = '';
             }
             const nameInput = slots[i].querySelector('.holder-name-input');
