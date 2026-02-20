@@ -22,7 +22,10 @@
             <div class="brand-subtitle">Attendance Admin Dashboard</div>
           </div>
         </div>
-        <div class="user-pill" id="admin-user-label">Logged in</div>
+        <div class="header-actions">
+          <span class="user-pill" id="admin-user-label">Logged in</span>
+          <button type="button" class="btn-logout" id="admin-logout-btn">Logout</button>
+        </div>
       </header>
 
       <nav class="tabs">
@@ -111,7 +114,7 @@
           </div>
           <div class="card children-list-card">
             <h2>All registered children</h2>
-            <p class="small">View and edit all learners (including those registered earlier). Use Edit to change details or replace holder photos. Delete only hides the row; use "Show hidden" to restore.</p>
+            <p class="small">View and edit all learners (including those registered earlier). Use Edit to change details or replace holder photos. Delete removes the child from the system permanently (including picker photos and attendance records).</p>
             <div class="header-actions mt" style="margin-bottom: 0.5rem;">
               <button class="btn-secondary" id="show-hidden-table-btn" type="button" disabled>Show hidden</button>
             </div>

@@ -244,10 +244,24 @@
 
       if (action === 'delete') {
         const name = `${child.first_name} ${child.last_name}`.trim();
-        if (!window.confirm('Remove this row from the table? The child stays in the system. You can show it again with "Show hidden".')) return;
-        childrenTableHiddenIds.add(Number(id));
-        saveChildrenTableHidden();
-        renderChildrenTable(currentChildren);
+        if (!window.confirm(`Permanently delete "${name}" from the system? This will remove the child, their authorized pickers, and attendance records. This cannot be undone.`)) return;
+        try {
+          const resp = await fetch(`/api/children/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: 'Bearer ' + getToken() },
+          });
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            alert(err.error || 'Failed to delete child.');
+            return;
+          }
+          childrenTableHiddenIds.delete(Number(id));
+          saveChildrenTableHidden();
+          await loadChildren();
+        } catch (err) {
+          console.error(err);
+          alert('Failed to delete child. Please try again.');
+        }
         return;
       }
 
@@ -406,7 +420,8 @@
     setStatus(editChildStatus, '', '');
     holderPhotosEdit.querySelectorAll('.holder-replace-input').forEach((inp) => { inp.value = ''; });
     holderPhotosEdit.querySelectorAll('.holder-name-input').forEach((inp) => { inp.value = ''; });
-    holderPhotosEdit.querySelectorAll('.holder-thumb').forEach((img) => { img.src = ''; img.style.display = 'none'; });
+    holderPhotosEdit.querySelectorAll('.holder-thumb').forEach((img) => { img.src = ''; img.onerror = null; img.style.display = ''; img.style.visibility = 'visible'; });
+    holderPhotosEdit.querySelectorAll('.holder-thumb-placeholder').forEach((el) => el.remove());
     holderPhotosEdit.querySelectorAll('.holder-edit-slot').forEach((slot) => { slot.style.display = ''; slot.removeAttribute('data-picker-id'); });
 
     fetch(`/api/children/${child.id}/pickers`, { headers: { Authorization: 'Bearer ' + getToken() } })
@@ -423,18 +438,40 @@
           return origin ? origin + path : url;
         };
         sorted.forEach((p, i) => {
-          if (slots[i]) {
-            slots[i].setAttribute('data-picker-id', p.id);
-            const thumb = slots[i].querySelector('.holder-thumb');
-            if (thumb && p.photoUrl) {
+          if (!slots[i]) return;
+          slots[i].setAttribute('data-picker-id', p.id);
+          const wrap = slots[i].querySelector('.holder-thumb-wrap');
+          const thumb = slots[i].querySelector('.holder-thumb');
+          // Remove any "Photo missing" placeholder from a previous load
+          const existingPlaceholder = wrap && wrap.querySelector('.holder-thumb-placeholder');
+          if (existingPlaceholder) existingPlaceholder.remove();
+          if (thumb) {
+            thumb.style.display = '';
+            thumb.style.visibility = 'visible';
+            if (p.photoUrl) {
               thumb.src = toFullUrl(p.photoUrl) + '?v=' + (p.id || i);
-              thumb.style.display = '';
+              thumb.onerror = () => {
+                thumb.style.display = 'none';
+                const span = document.createElement('span');
+                span.className = 'holder-thumb-placeholder';
+                span.textContent = 'Photo missing';
+                if (wrap) wrap.appendChild(span);
+              };
+            } else {
+              thumb.src = '';
+              thumb.style.display = 'none';
+              if (wrap) {
+                const span = document.createElement('span');
+                span.className = 'holder-thumb-placeholder';
+                span.textContent = 'No photo';
+                wrap.appendChild(span);
+              }
             }
-            const nameInput = slots[i].querySelector('.holder-name-input');
-            if (nameInput) {
-              const displayName = (p.name != null && String(p.name).trim() !== '') ? String(p.name).trim() : `Holder ${i + 1}`;
-              nameInput.value = displayName;
-            }
+          }
+          const nameInput = slots[i].querySelector('.holder-name-input');
+          if (nameInput) {
+            const displayName = (p.name != null && String(p.name).trim() !== '') ? String(p.name).trim() : `Holder ${i + 1}`;
+            nameInput.value = displayName;
           }
         });
         for (let i = sorted.length; i < 3; i++) {
@@ -455,6 +492,12 @@
   function closeEditChildModal() {
     editingChildId = null;
     editingPickers = [];
+    holderPhotosEdit.querySelectorAll('.holder-thumb[data-revoke-url]').forEach((img) => {
+      if (img.dataset.revokeUrl) {
+        URL.revokeObjectURL(img.dataset.revokeUrl);
+        delete img.dataset.revokeUrl;
+      }
+    });
     if (editChildModal) {
       editChildModal.setAttribute('aria-hidden', 'true');
       editChildModal.classList.remove('modal-open');
@@ -480,6 +523,19 @@
       const fileName = (fileInput.files[0].name || '').trim();
       const nameFromFile = fileName ? fileName.replace(/\.[^.]+$/, '').trim() : '';
       if (nameFromFile) nameInput.value = nameFromFile;
+    }
+    // Show chosen photo in the thumb so the user sees it before saving
+    const thumb = slot && slot.querySelector('.holder-thumb');
+    const wrap = slot && slot.querySelector('.holder-thumb-wrap');
+    const placeholder = wrap && wrap.querySelector('.holder-thumb-placeholder');
+    if (placeholder) placeholder.remove();
+    if (thumb && wrap) {
+      const url = URL.createObjectURL(fileInput.files[0]);
+      thumb.src = url;
+      thumb.style.display = '';
+      thumb.style.visibility = 'visible';
+      thumb.onerror = null;
+      thumb.dataset.revokeUrl = url;
     }
   });
 
@@ -893,6 +949,16 @@
     const adminLabel = document.getElementById('admin-user-label');
     const teacherName = window.localStorage.getItem('teacherName') || 'Admin';
     adminLabel.textContent = `Logged in as ${teacherName}`;
+
+    const logoutBtn = document.getElementById('admin-logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        window.localStorage.removeItem('authToken');
+        window.localStorage.removeItem('teacherName');
+        window.localStorage.removeItem('teacherAccess');
+        window.location.href = '/admin/login.html';
+      });
+    }
 
     const welcomeNameEl = document.getElementById('welcome-name');
     const welcomeSubEl = document.getElementById('welcome-sub');
