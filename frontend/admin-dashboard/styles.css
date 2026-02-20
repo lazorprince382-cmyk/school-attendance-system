@@ -635,6 +635,10 @@ body.login-page .status.error {
 }
 .modal-overlay.modal-open {
   display: flex;
+  overflow-y: auto;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1rem 1rem 2rem;
 }
 .modal-box {
   background: #fff;
@@ -642,8 +646,11 @@ body.login-page .status.error {
   padding: 1.25rem;
   max-width: 480px;
   width: 100%;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
   box-shadow: 0 8px 32px rgba(15, 23, 42, 0.25);
   border: 1px solid #bfdbfe;
+  margin: auto;
 }
 .modal-box h2 {
   margin-top: 0;
