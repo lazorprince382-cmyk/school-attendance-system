@@ -115,6 +115,7 @@
   }
 
   let childrenSearchQuery = '';
+  let childrenFilterClass = '';
 
   async function loadChildren() {
     try {
@@ -123,6 +124,7 @@
       });
       const children = await resp.json();
       currentChildren = children || [];
+      updateChildrenFilterClassOptions();
       renderChildrenTable();
       renderQrGrid(currentChildren);
     } catch (err) {
@@ -163,6 +165,28 @@
     document.body.removeChild(div);
   }
 
+  function getUniqueClasses(children) {
+    const set = new Set();
+    (children || []).forEach((c) => {
+      const cn = (c.class_name || '').trim();
+      if (cn) set.add(cn);
+    });
+    return Array.from(set).sort();
+  }
+
+  function updateChildrenFilterClassOptions() {
+    const sel = document.getElementById('children-filter-class');
+    if (!sel) return;
+    const current = sel.value;
+    const classes = getUniqueClasses(currentChildren);
+    sel.innerHTML = '<option value="">All classes</option>' + classes.map((cls) => `<option value="${escapeHtml(cls)}">${escapeHtml(cls)}</option>`).join('');
+    if (classes.includes(current)) sel.value = current;
+    else {
+      childrenFilterClass = '';
+      sel.value = '';
+    }
+  }
+
   function renderChildrenTable() {
     if (!childrenTableBody) return;
     childrenTableBody.innerHTML = '';
@@ -177,6 +201,9 @@
         const fullName = `${(c.first_name || '').trim()} ${(c.last_name || '').trim()}`.trim().toLowerCase();
         return fullName.includes(q);
       });
+    }
+    if (childrenFilterClass) {
+      toShow = toShow.filter((c) => (c.class_name || '').trim() === childrenFilterClass);
     }
     toShow.forEach((c) => {
       const tr = document.createElement('tr');
@@ -207,20 +234,17 @@
   }
 
   const childrenSearchInput = document.getElementById('children-search-input');
-  const childrenSearchClearBtn = document.getElementById('children-search-clear');
+  const childrenFilterClassSelect = document.getElementById('children-filter-class');
   if (childrenSearchInput) {
     childrenSearchInput.addEventListener('input', () => {
       childrenSearchQuery = childrenSearchInput.value;
       renderChildrenTable();
-      if (childrenSearchClearBtn) childrenSearchClearBtn.style.display = (childrenSearchQuery || '').trim() ? '' : 'none';
     });
   }
-  if (childrenSearchClearBtn) {
-    childrenSearchClearBtn.addEventListener('click', () => {
-      childrenSearchQuery = '';
-      if (childrenSearchInput) childrenSearchInput.value = '';
+  if (childrenFilterClassSelect) {
+    childrenFilterClassSelect.addEventListener('change', () => {
+      childrenFilterClass = (childrenFilterClassSelect.value || '').trim();
       renderChildrenTable();
-      childrenSearchClearBtn.style.display = 'none';
     });
   }
 
