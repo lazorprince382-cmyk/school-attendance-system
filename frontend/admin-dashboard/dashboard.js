@@ -114,21 +114,7 @@
     } catch (_) {}
   }
 
-  const STORAGE_KEY_TABLE_HIDDEN = 'adminChildrenTableHiddenIds';
-  let childrenTableHiddenIds = new Set();
-  try {
-    const storedTable = sessionStorage.getItem(STORAGE_KEY_TABLE_HIDDEN);
-    if (storedTable) {
-      const arr = JSON.parse(storedTable);
-      if (Array.isArray(arr)) childrenTableHiddenIds = new Set(arr.map(Number).filter((n) => !Number.isNaN(n)));
-    }
-  } catch (_) {}
-
-  function saveChildrenTableHidden() {
-    try {
-      sessionStorage.setItem(STORAGE_KEY_TABLE_HIDDEN, JSON.stringify(Array.from(childrenTableHiddenIds)));
-    } catch (_) {}
-  }
+  let childrenSearchQuery = '';
 
   async function loadChildren() {
     try {
@@ -137,7 +123,7 @@
       });
       const children = await resp.json();
       currentChildren = children || [];
-      renderChildrenTable(currentChildren);
+      renderChildrenTable();
       renderQrGrid(currentChildren);
     } catch (err) {
       console.error(err);
@@ -177,15 +163,21 @@
     document.body.removeChild(div);
   }
 
-  function renderChildrenTable(children) {
+  function renderChildrenTable() {
     if (!childrenTableBody) return;
     childrenTableBody.innerHTML = '';
     const byId = new Map();
-    (children || []).forEach((c) => {
+    (currentChildren || []).forEach((c) => {
       if (c && c.id != null && !byId.has(c.id)) byId.set(c.id, c);
     });
-    const unique = Array.from(byId.values());
-    const toShow = unique.filter((c) => !childrenTableHiddenIds.has(Number(c.id)));
+    let toShow = Array.from(byId.values());
+    const q = (childrenSearchQuery || '').trim().toLowerCase();
+    if (q) {
+      toShow = toShow.filter((c) => {
+        const fullName = `${(c.first_name || '').trim()} ${(c.last_name || '').trim()}`.trim().toLowerCase();
+        return fullName.includes(q);
+      });
+    }
     toShow.forEach((c) => {
       const tr = document.createElement('tr');
       const fullName = `${(c.first_name || '').trim()} ${(c.last_name || '').trim()}`.trim() || '—';
@@ -202,15 +194,6 @@
       `;
       childrenTableBody.appendChild(tr);
     });
-    updateShowHiddenTableBtn();
-  }
-
-  function updateShowHiddenTableBtn() {
-    const btn = document.getElementById('show-hidden-table-btn');
-    if (!btn) return;
-    const n = childrenTableHiddenIds.size;
-    btn.textContent = n > 0 ? `Show hidden (${n})` : 'Show hidden';
-    btn.disabled = n === 0;
   }
 
   function escapeHtml(str) {
@@ -223,12 +206,21 @@
     return currentChildren.find((c) => Number(c.id) === Number(id)) || null;
   }
 
-  const showHiddenTableBtn = document.getElementById('show-hidden-table-btn');
-  if (showHiddenTableBtn) {
-    showHiddenTableBtn.addEventListener('click', () => {
-      childrenTableHiddenIds.clear();
-      saveChildrenTableHidden();
-      renderChildrenTable(currentChildren);
+  const childrenSearchInput = document.getElementById('children-search-input');
+  const childrenSearchClearBtn = document.getElementById('children-search-clear');
+  if (childrenSearchInput) {
+    childrenSearchInput.addEventListener('input', () => {
+      childrenSearchQuery = childrenSearchInput.value;
+      renderChildrenTable();
+      if (childrenSearchClearBtn) childrenSearchClearBtn.style.display = (childrenSearchQuery || '').trim() ? '' : 'none';
+    });
+  }
+  if (childrenSearchClearBtn) {
+    childrenSearchClearBtn.addEventListener('click', () => {
+      childrenSearchQuery = '';
+      if (childrenSearchInput) childrenSearchInput.value = '';
+      renderChildrenTable();
+      childrenSearchClearBtn.style.display = 'none';
     });
   }
 
@@ -255,8 +247,6 @@
             alert(err.error || 'Failed to delete child.');
             return;
           }
-          childrenTableHiddenIds.delete(Number(id));
-          saveChildrenTableHidden();
           await loadChildren();
         } catch (err) {
           console.error(err);

@@ -710,6 +710,28 @@ body.login-page .status.error {
   font-size: 0.8rem;
   padding: 0.25rem;
 }
+
+.children-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.children-search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.5rem;
+}
+.children-search-input::placeholder {
+  color: #94a3b8;
+}
+.children-search-clear {
+  flex-shrink: 0;
+}
+
 .children-list-card .table-wrap {
   max-height: 320px;
   overflow: auto;

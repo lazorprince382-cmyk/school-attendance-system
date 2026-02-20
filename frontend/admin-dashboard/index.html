@@ -115,8 +115,9 @@
           <div class="card children-list-card">
             <h2>All registered children</h2>
             <p class="small">View and edit all learners (including those registered earlier). Use Edit to change details or replace holder photos. Delete removes the child from the system permanently (including picker photos and attendance records).</p>
-            <div class="header-actions mt" style="margin-bottom: 0.5rem;">
-              <button class="btn-secondary" id="show-hidden-table-btn" type="button" disabled>Show hidden</button>
+            <div class="children-search-wrap mt">
+              <input type="text" id="children-search-input" class="children-search-input" placeholder="Search by name (e.g. Tabula, Ashton)..." autocomplete="off" />
+              <button type="button" class="btn-secondary children-search-clear" id="children-search-clear" title="Clear search" style="display: none;">Clear</button>
             </div>
             <div class="table-wrap">
               <table id="children-table">
