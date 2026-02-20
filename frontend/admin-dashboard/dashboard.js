@@ -404,12 +404,68 @@
     renderQrGrid(currentChildren);
   });
 
+  const hiddenQrModal = document.getElementById('hidden-qr-modal');
+  const hiddenQrListEl = document.getElementById('hidden-qr-list');
+  const hiddenQrModalCloseBtn = document.getElementById('hidden-qr-modal-close');
+
+  function openHiddenQrModal() {
+    renderHiddenQrList();
+    if (hiddenQrModal) {
+      hiddenQrModal.setAttribute('aria-hidden', 'false');
+      hiddenQrModal.classList.add('modal-open');
+    }
+  }
+
+  function closeHiddenQrModal() {
+    if (hiddenQrModal) {
+      hiddenQrModal.setAttribute('aria-hidden', 'true');
+      hiddenQrModal.classList.remove('modal-open');
+    }
+  }
+
+  function renderHiddenQrList() {
+    if (!hiddenQrListEl) return;
+    const hiddenChildren = (currentChildren || []).filter((c) => c && c.id != null && qrGridHiddenIds.has(Number(c.id)));
+    hiddenQrListEl.innerHTML = '';
+    if (hiddenChildren.length === 0) {
+      hiddenQrListEl.innerHTML = '<p class="small muted">No hidden QR codes.</p>';
+      return;
+    }
+    hiddenChildren.forEach((c) => {
+      const row = document.createElement('div');
+      row.className = 'hidden-qr-row';
+      const fullName = `${(c.first_name || '').trim()} ${(c.last_name || '').trim()}`.trim() || '—';
+      const className = (c.class_name || '').trim() || '—';
+      row.innerHTML = `
+        <span class="hidden-qr-name">${escapeHtml(fullName)}</span>
+        <span class="hidden-qr-class">${escapeHtml(className)}</span>
+        <button type="button" class="btn-primary btn-small btn-unhide-qr" data-id="${c.id}">Unhide</button>
+      `;
+      const unhideBtn = row.querySelector('.btn-unhide-qr');
+      if (unhideBtn) {
+        unhideBtn.addEventListener('click', () => {
+          qrGridHiddenIds.delete(Number(c.id));
+          saveQrGridHidden();
+          renderQrGrid(currentChildren);
+          updateShowHiddenBtn();
+          renderHiddenQrList();
+          if (qrGridHiddenIds.size === 0) closeHiddenQrModal();
+        });
+      }
+      hiddenQrListEl.appendChild(row);
+    });
+  }
+
   const showHiddenQrBtn = document.getElementById('show-hidden-qr-btn');
   if (showHiddenQrBtn) {
-    showHiddenQrBtn.addEventListener('click', () => {
-      qrGridHiddenIds.clear();
-      saveQrGridHidden();
-      renderQrGrid(currentChildren);
+    showHiddenQrBtn.addEventListener('click', openHiddenQrModal);
+  }
+  if (hiddenQrModalCloseBtn) {
+    hiddenQrModalCloseBtn.addEventListener('click', closeHiddenQrModal);
+  }
+  if (hiddenQrModal) {
+    hiddenQrModal.addEventListener('click', (e) => {
+      if (e.target === hiddenQrModal) closeHiddenQrModal();
     });
   }
 

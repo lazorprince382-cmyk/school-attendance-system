@@ -77,12 +77,14 @@
     }
   }
 
-  function setReleaseButtonEnabled(enabled) {
-    const canRelease = enabled && lastChild;
-    if (btnRelease) btnRelease.disabled = !canRelease;
-    if (btnEmergencyRelease) btnEmergencyRelease.disabled = !canRelease;
+  function setReleaseButtonEnabled() {
+    const hasChild = !!lastChild;
+    const hasPickerSelected = selectedPickerId != null && selectedPickerId !== '';
+    const canConfirmRelease = hasChild && hasPickerSelected;
+    if (btnRelease) btnRelease.disabled = !canConfirmRelease;
+    if (btnEmergencyRelease) btnEmergencyRelease.disabled = !hasChild;
     const buttonsRow = btnRelease && btnRelease.closest('.buttons-row');
-    if (buttonsRow) buttonsRow.classList.toggle('release-enabled', !!canRelease && selectedPickerId != null);
+    if (buttonsRow) buttonsRow.classList.toggle('release-enabled', canConfirmRelease);
   }
 
   function openPickerZoom(photoUrl, name) {
@@ -131,7 +133,7 @@
             selectBtn.textContent = 'Picked';
             selectBtn.classList.add('is-selected');
           }
-          setReleaseButtonEnabled(!!lastChild);
+          setReleaseButtonEnabled();
         }
         return;
       }
@@ -209,7 +211,7 @@
         if (selectBtn) selectBtn.style.display = 'none';
       }
     }
-    setReleaseButtonEnabled(!!lastChild);
+    setReleaseButtonEnabled();
   }
 
   initPickerZoomOverlay();
@@ -218,7 +220,7 @@
     lastQrText = null;
     lastChild = null;
     selectedPickerId = null;
-    setReleaseButtonEnabled(false);
+    setReleaseButtonEnabled();
     setChildDetails(null, null);
     renderPickers([]);
     setStatus('Ready for next scan.', 'info');
@@ -228,7 +230,7 @@
     lastQrText = null;
     lastChild = null;
     selectedPickerId = null;
-    setReleaseButtonEnabled(false);
+    setReleaseButtonEnabled();
     setChildDetails(null, null);
     renderPickers([]);
     setStatus('Point camera at QR code.', 'info');
@@ -295,7 +297,7 @@
     }
 
     try {
-      setReleaseButtonEnabled(false);
+      setReleaseButtonEnabled();
       setStatus(emergencyRelease ? 'Recording emergency release...' : 'Recording departure...', 'info');
       const body = {
         childId: lastChild.id,
@@ -315,7 +317,7 @@
       const json = await resp.json();
       if (!resp.ok) {
         setStatus(json.error || 'Failed to record release.', 'error');
-        setReleaseButtonEnabled(true);
+        setReleaseButtonEnabled();
         return;
       }
       setStatus(emergencyRelease ? 'Child released (emergency). Ready for next scan.' : 'Child released. Ready for next scan.', 'success');
@@ -327,7 +329,7 @@
     } catch (err) {
       console.error('submitRelease error', err);
       setStatus('Network error while recording release.', 'error');
-      setReleaseButtonEnabled(true);
+      setReleaseButtonEnabled();
     }
   }
 
@@ -370,7 +372,7 @@
     triggerScanFeedback();
     lastQrText = qrText;
     lastChild = null;
-    setReleaseButtonEnabled(false);
+    setReleaseButtonEnabled();
     setStatus('QR scanned. Looking up child...', 'info');
     setChildDetails(null, qrText);
     renderPickers([]);
@@ -392,7 +394,7 @@
       renderPickers([]);
       return;
     }
-    setReleaseButtonEnabled(!!lastChild);
+    setReleaseButtonEnabled();
     setStatus('Select who is picking, then confirm release.', 'info');
     enterConfirmMode();
   }

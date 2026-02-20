@@ -789,6 +789,40 @@ body.login-page .status.error {
   overflow: auto;
 }
 
+/* Hidden QR codes modal */
+.modal-box-hidden-qr .hidden-qr-list {
+  max-height: 280px;
+  overflow-y: auto;
+  margin-top: 0.75rem;
+}
+.hidden-qr-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.hidden-qr-row:last-child {
+  border-bottom: none;
+}
+.hidden-qr-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 500;
+}
+.hidden-qr-class {
+  flex-shrink: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+.btn-unhide-qr {
+  flex-shrink: 0;
+}
+.small.muted {
+  color: #64748b;
+  margin: 0.5rem 0 0;
+}
+
 @media (max-width: 768px) {
   .login-badge {
     width: 150px;
