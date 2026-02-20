@@ -23,7 +23,7 @@ function main() {
     fs.mkdirSync(certDir, { recursive: true });
   }
 
-  const attrs = [{ name: 'commonName', value: 'Ocean of Knowledge School' }];
+  const attrs = [{ name: 'commonName', value: 'The Ocean Of Knowledge School' }];
   const options = {
     keySize: 2048,
     days: 365,

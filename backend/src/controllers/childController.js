@@ -195,7 +195,7 @@ async function getChildByQr(req, res) {
       id: child.id,
       fullName: `${child.first_name} ${child.last_name}`,
       className: child.class_name,
-      schoolName: 'Ocean of Knowledge School',
+      schoolName: 'The Ocean Of Knowledge School',
       authorizedPickers,
     });
   } catch (err) {

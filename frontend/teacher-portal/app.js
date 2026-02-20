@@ -80,11 +80,11 @@
   function setReleaseButtonEnabled() {
     const hasChild = !!lastChild;
     const hasPickerSelected = selectedPickerId != null && selectedPickerId !== '';
-    const canConfirmRelease = hasChild && hasPickerSelected;
-    if (btnRelease) btnRelease.disabled = !canConfirmRelease;
-    if (btnEmergencyRelease) btnEmergencyRelease.disabled = !hasChild;
+    const canRelease = hasChild && hasPickerSelected;
+    if (btnRelease) btnRelease.disabled = !canRelease;
+    if (btnEmergencyRelease) btnEmergencyRelease.disabled = !canRelease;
     const buttonsRow = btnRelease && btnRelease.closest('.buttons-row');
-    if (buttonsRow) buttonsRow.classList.toggle('release-enabled', canConfirmRelease);
+    if (buttonsRow) buttonsRow.classList.toggle('release-enabled', canRelease);
   }
 
   function openPickerZoom(photoUrl, name) {

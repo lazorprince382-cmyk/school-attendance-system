@@ -1,7 +1,7 @@
 {
   "name": "Attendance Admin",
   "short_name": "Admin",
-  "description": "Ocean of Knowledge School - Attendance Admin Dashboard",
+  "description": "The Ocean Of Knowledge School - Attendance Admin Dashboard",
   "start_url": "/admin/",
   "display": "standalone",
   "orientation": "any",

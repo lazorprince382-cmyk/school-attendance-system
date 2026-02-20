@@ -1,7 +1,7 @@
 {
   "name": "Attendance Scanner",
   "short_name": "Scanner",
-  "description": "Ocean of Knowledge School - Departure / Release Scanner",
+  "description": "The Ocean Of Knowledge School - Departure / Release Scanner",
   "start_url": "/teacher/",
   "display": "standalone",
   "orientation": "portrait",
