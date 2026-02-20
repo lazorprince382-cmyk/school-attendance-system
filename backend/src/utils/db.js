@@ -6,11 +6,12 @@ const useSsl =
   !connectionString.includes('localhost') &&
   !connectionString.includes('127.0.0.1');
 
+// Render (and some other hosts) use a self-signed cert for Postgres; allow it so the app can start.
 const pool = new Pool({
   connectionString,
   max: 10,
   idleTimeoutMillis: 30000,
-  ssl: useSsl ? { rejectUnauthorized: true } : false,
+  ssl: useSsl ? { rejectUnauthorized: false } : false,
 });
 
 pool.on('error', (err) => {
