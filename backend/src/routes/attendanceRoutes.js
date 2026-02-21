@@ -5,6 +5,7 @@ const {
   getAttendanceByDate,
   getAttendanceDates,
   exportAttendanceCsv,
+  deleteAttendanceByDate,
 } = require('../controllers/attendanceController');
 const { authMiddleware, requireAdmin, requireScanner } = require('../middleware/authMiddleware');
 
@@ -18,6 +19,7 @@ router.get('/today', authMiddleware, requireAdmin, getTodayAttendance);
 router.get('/dates', authMiddleware, requireAdmin, getAttendanceDates);
 router.get('/by-date', authMiddleware, requireAdmin, getAttendanceByDate);
 router.get('/export', authMiddleware, requireAdmin, exportAttendanceCsv);
+router.delete('/by-date', authMiddleware, requireAdmin, deleteAttendanceByDate);
 
 module.exports = router;
 

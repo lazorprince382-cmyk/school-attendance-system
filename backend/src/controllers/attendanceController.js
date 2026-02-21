@@ -1,4 +1,4 @@
-const { createAttendance, getDailyLogsForChild, getTodayLogs, getTodayLogsWithNames, getLogsWithNamesByDate, getDatesWithLogs, getAllLogs } = require('../models/attendanceModel');
+const { createAttendance, getDailyLogsForChild, getTodayLogs, getTodayLogsWithNames, getLogsWithNamesByDate, getDatesWithLogs, getAllLogs, getAllLogsWithNames, deleteLogsByDate } = require('../models/attendanceModel');
 const { getPickersByChildId } = require('../models/authorizedPickerModel');
 const { isValidScanTime, todayDateString } = require('../utils/timeUtils');
 
@@ -87,21 +87,39 @@ async function getAttendanceDates(req, res) {
   res.json({ dates });
 }
 
+function formatTimestampForCsv(ts) {
+  if (ts == null) return '';
+  const d = ts instanceof Date ? ts : new Date(ts);
+  if (Number.isNaN(d.getTime())) return String(ts);
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const h = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${dd}/${mm}/${yyyy}, ${h}:${min}:${s}`;
+}
+
 async function exportAttendanceCsv(req, res) {
-  const dateStr = (req.query && req.query.date) || '';
-  let rows;
+  const raw = (req.query && req.query.date) || '';
+  const dateStr = normalizeDateParam(raw) || raw.trim() || null;
+  let records;
   let filename = 'attendance-export.csv';
-  if (DATE_REGEX.test(dateStr)) {
-    const { records } = await getLogsWithNamesByDate(dateStr);
-    rows = records;
+  if (dateStr) {
+    const result = await getLogsWithNamesByDate(dateStr);
+    records = result.records;
     filename = `departures-${dateStr}.csv`;
   } else {
-    rows = await getAllLogs();
+    records = await getAllLogsWithNames();
   }
-  const header = 'id,childId,teacherId,pickerId,action,timestamp,date';
-  const dataRows = rows.map((r) => {
-    const ts = r.timestamp && (typeof r.timestamp.toISOString === 'function') ? r.timestamp.toISOString() : (r.timestamp || '');
-    return [r.id, r.child_id, r.teacher_id || '', r.picker_id != null ? r.picker_id : '', r.action, ts, r.date]
+  const header = 'ID,Child,Class,Teacher,Holder who picked,Action,Time';
+  const dataRows = records.map((r) => {
+    const childName = (r.child_name != null && String(r.child_name).trim() !== '') ? r.child_name : (r.child_id != null ? String(r.child_id) : '—');
+    const className = (r.class_name != null && String(r.class_name).trim() !== '') ? r.class_name : (r.child_class != null && String(r.child_class).trim() !== '') ? r.child_class : '—';
+    const teacherName = (r.teacher_name != null && String(r.teacher_name).trim() !== '') ? r.teacher_name : '—';
+    const pickerName = (r.picker_name != null && String(r.picker_name).trim() !== '') ? r.picker_name : '—';
+    const timeStr = formatTimestampForCsv(r.timestamp);
+    return [r.id, childName, className, teacherName, pickerName, r.action || 'OUT', timeStr]
       .map((v) => `"${String(v).replace(/"/g, '""')}"`)
       .join(',');
   });
@@ -111,11 +129,22 @@ async function exportAttendanceCsv(req, res) {
   res.send(csv);
 }
 
+async function deleteAttendanceByDate(req, res) {
+  const raw = (req.query && req.query.date) || '';
+  const dateStr = normalizeDateParam(raw);
+  if (!dateStr) {
+    return res.status(400).json({ error: 'Query parameter date is required and must be YYYY-MM-DD (or ISO date string)' });
+  }
+  const deleted = await deleteLogsByDate(dateStr);
+  return res.json({ success: true, deleted });
+}
+
 module.exports = {
   recordAttendance,
   getTodayAttendance,
   getAttendanceByDate,
   getAttendanceDates,
   exportAttendanceCsv,
+  deleteAttendanceByDate,
 };
 

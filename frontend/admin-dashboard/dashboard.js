@@ -729,6 +729,7 @@
   const historyTableWrap = document.getElementById('history-table-wrap');
   const historyTableTitle = document.getElementById('history-table-title');
   const historyTableBody = document.querySelector('#history-attendance-table-body');
+  let selectedHistoryDate = null;
 
   function buildAttendanceRow(r) {
     const childName = r.child_name != null ? escapeHtml(r.child_name) : String(r.child_id);
@@ -757,15 +758,66 @@
       const dates = data.dates || [];
       historyDatesSummary.textContent = dates.length ? `${dates.length} day(s) with departures` : 'No departure dates yet.';
       historyDatesList.innerHTML = '';
+      selectedHistoryDate = null;
       dates.forEach((d) => {
+        const row = document.createElement('div');
+        row.className = 'history-date-row';
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn-secondary history-date-btn';
         btn.textContent = formatHistoryDate(d);
-        btn.title = 'Open this day\'s departures';
-        btn.addEventListener('click', () => loadHistoryByDate(d));
-        historyDatesList.appendChild(btn);
+        btn.title = 'Click to show or hide this day\'s departures';
+        btn.dataset.date = d;
+        btn.addEventListener('click', () => toggleHistoryByDate(d, btn));
+        const actionsWrap = document.createElement('div');
+        actionsWrap.className = 'history-date-actions';
+        const menuBtn = document.createElement('button');
+        menuBtn.type = 'button';
+        menuBtn.className = 'history-date-menu-btn';
+        menuBtn.setAttribute('aria-label', 'Options');
+        menuBtn.innerHTML = '&#8942;';
+        menuBtn.title = 'View or delete this day\'s records';
+        const menu = document.createElement('div');
+        menu.className = 'history-date-menu';
+        menu.setAttribute('hidden', '');
+        const viewOpt = document.createElement('button');
+        viewOpt.type = 'button';
+        viewOpt.className = 'history-date-menu-option';
+        viewOpt.textContent = 'View';
+        viewOpt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          menu.setAttribute('hidden', '');
+          toggleHistoryByDate(d, btn);
+        });
+        const deleteOpt = document.createElement('button');
+        deleteOpt.type = 'button';
+        deleteOpt.className = 'history-date-menu-option history-date-menu-option-danger';
+        deleteOpt.textContent = 'Delete';
+        deleteOpt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          menu.setAttribute('hidden', '');
+          deleteHistoryByDate(d);
+        });
+        menu.appendChild(viewOpt);
+        menu.appendChild(deleteOpt);
+        menuBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const open = document.querySelector('.history-date-menu:not([hidden])');
+          if (open && open !== menu) open.setAttribute('hidden', '');
+          if (menu.hasAttribute('hidden')) {
+            menu.removeAttribute('hidden');
+          } else {
+            menu.setAttribute('hidden', '');
+          }
+        });
+        actionsWrap.appendChild(menuBtn);
+        actionsWrap.appendChild(menu);
+        row.appendChild(btn);
+        row.appendChild(actionsWrap);
+        historyDatesList.appendChild(row);
       });
+      historyTableWrap.style.display = 'none';
       return dates;
     } catch (err) {
       console.error(err);
@@ -774,7 +826,14 @@
     }
   }
 
-  async function loadHistoryByDate(dateStr) {
+  async function toggleHistoryByDate(dateStr, clickedBtn) {
+    const isSameAndVisible = selectedHistoryDate === dateStr && historyTableWrap.style.display !== 'none';
+    if (isSameAndVisible) {
+      historyTableWrap.style.display = 'none';
+      selectedHistoryDate = null;
+      historyDatesList.querySelectorAll('.history-date-btn').forEach((b) => b.classList.remove('selected'));
+      return;
+    }
     try {
       const resp = await fetch('/api/attendance/by-date?date=' + encodeURIComponent(dateStr), {
         headers: { Authorization: 'Bearer ' + getToken() },
@@ -784,6 +843,9 @@
         console.error('History by date failed', resp.status, errData);
         historyTableBody.innerHTML = '<tr><td colspan="7">Could not load departures for this date.</td></tr>';
         historyTableWrap.style.display = 'block';
+        selectedHistoryDate = dateStr;
+        historyDatesList.querySelectorAll('.history-date-btn').forEach((b) => b.classList.remove('selected'));
+        if (clickedBtn) clickedBtn.classList.add('selected');
         return;
       }
       const data = await resp.json();
@@ -793,14 +855,53 @@
         historyTableBody.insertAdjacentHTML('beforeend', buildAttendanceRow(r));
       });
       historyTableWrap.style.display = 'block';
+      selectedHistoryDate = dateStr;
+      historyDatesList.querySelectorAll('.history-date-btn').forEach((b) => b.classList.remove('selected'));
+      if (clickedBtn) clickedBtn.classList.add('selected');
     } catch (err) {
       console.error(err);
       historyTableBody.innerHTML = '<tr><td colspan="7">Could not load departures.</td></tr>';
       historyTableWrap.style.display = 'block';
+      selectedHistoryDate = dateStr;
+    }
+  }
+
+  function loadHistoryByDate(dateStr) {
+    const btn = historyDatesList.querySelector('.history-date-btn[data-date="' + dateStr + '"]');
+    toggleHistoryByDate(dateStr, btn || null);
+  }
+
+  function closeHistoryMenus() {
+    historyDatesList.querySelectorAll('.history-date-menu').forEach((m) => m.setAttribute('hidden', ''));
+  }
+
+  async function deleteHistoryByDate(dateStr) {
+    const label = formatHistoryDate(dateStr);
+    if (!confirm('Delete all departure records for ' + label + '? This cannot be undone.')) return;
+    try {
+      const resp = await fetch('/api/attendance/by-date?date=' + encodeURIComponent(dateStr), {
+        method: 'DELETE',
+        headers: { Authorization: 'Bearer ' + getToken() },
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        alert(err.error || 'Failed to delete.');
+        return;
+      }
+      if (selectedHistoryDate === dateStr) {
+        historyTableWrap.style.display = 'none';
+        selectedHistoryDate = null;
+        historyDatesList.querySelectorAll('.history-date-btn').forEach((b) => b.classList.remove('selected'));
+      }
+      await loadHistoryDates();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete.');
     }
   }
 
   if (refreshHistoryDatesBtn) refreshHistoryDatesBtn.addEventListener('click', loadHistoryDates);
+  document.addEventListener('click', closeHistoryMenus);
 
   // Export from history: list of dates with download button each
   const exportHistoryDatesList = document.getElementById('export-history-dates-list');

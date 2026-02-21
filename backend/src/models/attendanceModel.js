@@ -57,6 +57,23 @@ async function getAllLogs() {
   return rows;
 }
 
+async function getAllLogsWithNames() {
+  const { rows } = await query(
+    `SELECT a.id, a.child_id, a.teacher_id, a.picker_id, a.action, a.timestamp, a.date,
+            c.first_name AS child_first_name, c.last_name AS child_last_name,
+            c.class_name AS child_class_name,
+            t.name AS teacher_name,
+            p.name AS picker_name
+     FROM attendance_logs a
+     LEFT JOIN children c ON c.id = a.child_id
+     LEFT JOIN teachers t ON t.id = a.teacher_id
+     LEFT JOIN authorized_pickers p ON p.id = a.picker_id
+     ORDER BY a.date DESC, a.timestamp DESC`,
+    []
+  );
+  return rows.map(mapRowToRecord);
+}
+
 function mapRowToRecord(r) {
   const childClass = (r.child_class_name != null && String(r.child_class_name).trim() !== '')
     ? String(r.child_class_name).trim()
@@ -119,6 +136,14 @@ async function getDatesWithLogs() {
   return rows.map((r) => toDateOnly(r.date)).filter(Boolean);
 }
 
+async function deleteLogsByDate(dateStr) {
+  const { rowCount } = await query(
+    'DELETE FROM attendance_logs WHERE date = $1',
+    [dateStr]
+  );
+  return rowCount;
+}
+
 module.exports = {
   createAttendance,
   getDailyLogsForChild,
@@ -127,5 +152,7 @@ module.exports = {
   getLogsWithNamesByDate,
   getDatesWithLogs,
   getAllLogs,
+  getAllLogsWithNames,
+  deleteLogsByDate,
 };
 
