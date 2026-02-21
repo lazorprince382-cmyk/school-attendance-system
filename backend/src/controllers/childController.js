@@ -126,12 +126,13 @@ async function registerChildWithPickers(req, res) {
   const photo1 = files.photo1 && files.photo1[0];
   const photo2 = files.photo2 && files.photo2[0];
   const photo3 = files.photo3 && files.photo3[0];
+  const photos = [photo1, photo2, photo3].filter(Boolean);
 
   if (!fullName.trim()) {
     return res.status(400).json({ error: 'Full name is required' });
   }
-  if (!photo1 || !photo2 || !photo3) {
-    return res.status(400).json({ error: 'All three holder photos are required' });
+  if (photos.length === 0) {
+    return res.status(400).json({ error: 'At least one holder photo is required' });
   }
 
   const { firstName, lastName } = parseFullName(fullName);
@@ -146,7 +147,6 @@ async function registerChildWithPickers(req, res) {
     });
     const childId = child.id;
 
-    const photos = [photo1, photo2, photo3];
     for (let i = 0; i < photos.length; i += 1) {
       const file = photos[i];
       const ext = (file.originalname && path.extname(file.originalname)) || '.jpg';

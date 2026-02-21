@@ -236,6 +236,18 @@ button {
   color: #fff;
 }
 
+.required-dot {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6b7280);
+  font-weight: normal;
+}
+
+.muted {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6b7280);
+  font-weight: normal;
+}
+
 .small {
   font-size: 0.75rem;
   color: #1e40af;
@@ -759,6 +771,47 @@ body.login-page .status.error {
 .children-list-card .table-wrap {
   max-height: 320px;
   overflow: auto;
+}
+
+.history-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.history-search-row,
+.history-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.history-search-row input[type="date"],
+.history-filter-row select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.history-filter-row label {
+  margin-right: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .history-dates-list {

@@ -64,16 +64,16 @@
                     <input id="child-parent-phone-input" type="tel" placeholder="+2567XXXXXXXX" />
                   </div>
                   <div class="full-width">
-                    <label>Holder 1 photo</label>
-                    <input type="file" id="holder-photo-1" accept="image/*" required />
+                    <label>Holder 1 photo <span class="required-dot">(at least one required)</span></label>
+                    <input type="file" id="holder-photo-1" accept="image/*" />
                   </div>
                   <div class="full-width">
-                    <label>Holder 2 photo</label>
-                    <input type="file" id="holder-photo-2" accept="image/*" required />
+                    <label>Holder 2 photo <span class="muted">(optional)</span></label>
+                    <input type="file" id="holder-photo-2" accept="image/*" />
                   </div>
                   <div class="full-width">
-                    <label>Holder 3 photo</label>
-                    <input type="file" id="holder-photo-3" accept="image/*" required />
+                    <label>Holder 3 photo <span class="muted">(optional)</span></label>
+                    <input type="file" id="holder-photo-3" accept="image/*" />
                   </div>
                 </div>
                 <div class="mt">
@@ -173,8 +173,21 @@
         <section id="tab-history">
           <div class="card">
             <h2>History departures</h2>
-            <p class="small">Open a date below to view that day’s departure table. Each date is like a file you can open and export.</p>
-            <button class="btn-secondary" id="refresh-history-dates-btn" type="button">Refresh list</button>
+            <p class="small">Open a date below to view that day’s departure table. Search by date or filter by month.</p>
+            <div class="history-toolbar">
+              <div class="history-search-row">
+                <label for="history-search-date" class="sr-only">Search by date</label>
+                <input type="date" id="history-search-date" />
+                <button type="button" class="btn-secondary" id="history-search-btn">Search date</button>
+              </div>
+              <div class="history-filter-row">
+                <label for="history-filter-month">Filter by month</label>
+                <select id="history-filter-month">
+                  <option value="">All months</option>
+                </select>
+              </div>
+              <button class="btn-secondary" id="refresh-history-dates-btn" type="button">Refresh list</button>
+            </div>
             <div class="small mt" id="history-dates-summary"></div>
             <div class="history-dates-list" id="history-dates-list"></div>
             <div class="mt" id="history-table-wrap" style="display: none;">
