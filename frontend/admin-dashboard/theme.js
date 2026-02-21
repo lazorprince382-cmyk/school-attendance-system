@@ -3,8 +3,7 @@
   var root = document.documentElement;
 
   function getDefaultTheme() {
-    var app = root.getAttribute('data-app');
-    return app === 'teacher' ? 'dark' : 'light';
+    return 'light';
   }
 
   function getTheme() {

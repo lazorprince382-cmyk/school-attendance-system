@@ -529,26 +529,9 @@ html[data-theme="dark"] body.login-page {
   padding: 2rem 1.5rem;
 }
 
-.login-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  width: 100%;
-  flex-shrink: 0;
-  margin-bottom: 0.5rem;
-  position: relative;
-}
-
-.login-header-row .theme-toggle-login {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
 .login-badge-wrap {
   flex-shrink: 0;
+  margin-bottom: 0.5rem;
 }
 
 .login-badge {
@@ -764,11 +747,6 @@ html[data-theme="dark"] .theme-toggle .icon-sun {
 }
 html:not([data-theme="dark"]) .theme-toggle .icon-moon {
   display: inline;
-}
-
-.theme-toggle-login {
-  width: 44px;
-  height: 44px;
 }
 
 /* Edit child modal */
