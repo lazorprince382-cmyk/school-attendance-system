@@ -6,12 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0f172a" />
     <link rel="stylesheet" href="./styles.css" />
+    <script>
+      (function(){try{var t=localStorage.getItem('attendance-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);else document.documentElement.setAttribute('data-theme','light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   </head>
   <body>
     <div class="app">
-      <header>
+      <header class="top-header" style="display: flex; align-items: center; justify-content: space-between;">
         <div class="title">QR Generator</div>
+        <button type="button" class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle dark mode" title="Dark / Light mode">
+          <span class="icon-sun" aria-hidden="true">☀️</span>
+          <span class="icon-moon" aria-hidden="true">🌙</span>
+        </button>
       </header>
       <main>
         <div class="card">
@@ -74,6 +81,7 @@
         });
       })();
     </script>
+    <script src="./theme.js"></script>
   </body>
   </html>
 
