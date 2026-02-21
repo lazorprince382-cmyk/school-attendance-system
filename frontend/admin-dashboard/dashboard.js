@@ -42,6 +42,16 @@
     if (type) el.classList.add(type);
   }
 
+  function formatHistoryDate(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return dateStr;
+    const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return dateStr;
+    const [, y, m, d] = match;
+    const date = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+    const dayName = date.toLocaleDateString('en-GB', { weekday: 'long' });
+    return `${dayName} ${d}/${m}/${y}`;
+  }
+
   // Children & QR
   const registerChildForm = document.getElementById('register-child-form');
   const registerChildStatus = document.getElementById('register-child-status');
@@ -751,7 +761,7 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn-secondary history-date-btn';
-        btn.textContent = d;
+        btn.textContent = formatHistoryDate(d);
         btn.title = 'Open this day\'s departures';
         btn.addEventListener('click', () => loadHistoryByDate(d));
         historyDatesList.appendChild(btn);
@@ -769,8 +779,15 @@
       const resp = await fetch('/api/attendance/by-date?date=' + encodeURIComponent(dateStr), {
         headers: { Authorization: 'Bearer ' + getToken() },
       });
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}));
+        console.error('History by date failed', resp.status, errData);
+        historyTableBody.innerHTML = '<tr><td colspan="7">Could not load departures for this date.</td></tr>';
+        historyTableWrap.style.display = 'block';
+        return;
+      }
       const data = await resp.json();
-      historyTableTitle.textContent = 'Departures · ' + dateStr;
+      historyTableTitle.textContent = 'Departures · ' + formatHistoryDate(dateStr);
       historyTableBody.innerHTML = '';
       (data.records || []).forEach((r) => {
         historyTableBody.insertAdjacentHTML('beforeend', buildAttendanceRow(r));
@@ -778,6 +795,8 @@
       historyTableWrap.style.display = 'block';
     } catch (err) {
       console.error(err);
+      historyTableBody.innerHTML = '<tr><td colspan="7">Could not load departures.</td></tr>';
+      historyTableWrap.style.display = 'block';
     }
   }
 
@@ -799,7 +818,7 @@
         const wrap = document.createElement('div');
         wrap.className = 'export-date-row';
         const label = document.createElement('span');
-        label.textContent = d;
+        label.textContent = formatHistoryDate(d);
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn-secondary btn-small';

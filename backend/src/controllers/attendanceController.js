@@ -64,10 +64,19 @@ async function getTodayAttendance(req, res) {
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
+function normalizeDateParam(input) {
+  if (!input || typeof input !== 'string') return null;
+  const trimmed = input.trim();
+  if (DATE_REGEX.test(trimmed)) return trimmed;
+  const match = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : null;
+}
+
 async function getAttendanceByDate(req, res) {
-  const dateStr = (req.query && req.query.date) || '';
-  if (!DATE_REGEX.test(dateStr)) {
-    return res.status(400).json({ error: 'Query parameter date is required and must be YYYY-MM-DD' });
+  const raw = (req.query && req.query.date) || '';
+  const dateStr = normalizeDateParam(raw);
+  if (!dateStr) {
+    return res.status(400).json({ error: 'Query parameter date is required and must be YYYY-MM-DD (or ISO date string)' });
   }
   const { date, records } = await getLogsWithNamesByDate(dateStr);
   res.json({ date, count: records.length, records });
