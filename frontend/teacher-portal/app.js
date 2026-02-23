@@ -22,15 +22,12 @@
   let resetTimeout = null;
 
   const scannerConfig = {
-    fps: 20,
+    fps: 8,
+    aspectRatio: 1.0,
     qrbox: (vw, vh) => {
-      const side = Math.min(vw, vh) * 0.95;
+      const minSide = Math.min(vw, vh);
+      const side = Math.min(280, Math.max(180, minSide * 0.7));
       return { width: side, height: side };
-    },
-    videoConstraints: {
-      width: { ideal: 1280 },
-      height: { ideal: 720 },
-      facingMode: { exact: 'environment' },
     },
   };
 
