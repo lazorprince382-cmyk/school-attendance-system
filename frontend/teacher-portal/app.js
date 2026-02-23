@@ -34,11 +34,38 @@
     },
   };
 
+  const INACTIVITY_MINUTES = 10;
+  const INACTIVITY_MS = INACTIVITY_MINUTES * 60 * 1000;
+
+  function isStandalone() {
+    if (typeof navigator !== 'undefined' && navigator.standalone) return true;
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(display-mode: standalone)').matches ||
+        window.matchMedia('(display-mode: fullscreen)').matches;
+    }
+    return false;
+  }
+
+  function clearAuth() {
+    window.localStorage.removeItem('authToken');
+    window.localStorage.removeItem('teacherName');
+    window.localStorage.removeItem('teacherAccess');
+  }
+
+  function redirectToLogin() {
+    clearAuth();
+    window.location.href = '/admin/login.html';
+  }
+
   function getToken() {
     return window.localStorage.getItem('authToken') || '';
   }
 
   function requireAuth() {
+    if (isStandalone()) {
+      redirectToLogin();
+      return false;
+    }
     const token = getToken();
     if (!token) {
       window.location.href = '/admin/login.html';
@@ -258,9 +285,7 @@
   }
 
   function logout() {
-    window.localStorage.removeItem('authToken');
-    window.localStorage.removeItem('teacherName');
-    window.location.href = '/admin/login.html';
+    redirectToLogin();
   }
 
   logoutBtn.addEventListener('click', logout);
@@ -457,6 +482,19 @@
   }
 
   window.addEventListener('load', () => {
+    if (!requireAuth()) return;
+    let inactivityTimer = null;
+    function resetInactivityTimer() {
+      if (inactivityTimer) clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        redirectToLogin();
+      }, INACTIVITY_MS);
+    }
+    const activityEvents = ['mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
+    activityEvents.forEach((ev) => {
+      document.addEventListener(ev, resetInactivityTimer, { passive: true });
+    });
+    resetInactivityTimer();
     initTeacherInfo();
     initQrScanner();
   });

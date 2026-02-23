@@ -8,6 +8,29 @@
     export: document.getElementById('tab-export'),
   };
 
+  const INACTIVITY_MINUTES = 10;
+  const INACTIVITY_MS = INACTIVITY_MINUTES * 60 * 1000;
+
+  function isStandalone() {
+    if (typeof navigator !== 'undefined' && navigator.standalone) return true;
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(display-mode: standalone)').matches ||
+        window.matchMedia('(display-mode: fullscreen)').matches;
+    }
+    return false;
+  }
+
+  function clearAuth() {
+    window.localStorage.removeItem('authToken');
+    window.localStorage.removeItem('teacherName');
+    window.localStorage.removeItem('teacherAccess');
+  }
+
+  function redirectToLogin() {
+    clearAuth();
+    window.location.href = '/admin/login.html';
+  }
+
   function getToken() {
     return window.localStorage.getItem('authToken') || '';
   }
@@ -114,7 +137,7 @@
   const STORAGE_KEY_QR_HIDDEN = 'adminQrGridHiddenIds';
   let qrGridHiddenIds = new Set();
   try {
-    const stored = sessionStorage.getItem(STORAGE_KEY_QR_HIDDEN);
+    const stored = window.localStorage.getItem(STORAGE_KEY_QR_HIDDEN);
     if (stored) {
       const arr = JSON.parse(stored);
       if (Array.isArray(arr)) qrGridHiddenIds = new Set(arr.map(Number).filter((n) => !Number.isNaN(n)));
@@ -123,7 +146,7 @@
 
   function saveQrGridHidden() {
     try {
-      sessionStorage.setItem(STORAGE_KEY_QR_HIDDEN, JSON.stringify(Array.from(qrGridHiddenIds)));
+      window.localStorage.setItem(STORAGE_KEY_QR_HIDDEN, JSON.stringify(Array.from(qrGridHiddenIds)));
     } catch (_) {}
   }
 
@@ -1213,6 +1236,10 @@
 
   // Init
   window.addEventListener('load', () => {
+    if (isStandalone()) {
+      redirectToLogin();
+      return;
+    }
     if (!getToken()) {
       window.location.href = '/admin/login.html';
       return;
@@ -1222,6 +1249,19 @@
       return;
     }
 
+    let inactivityTimer = null;
+    function resetInactivityTimer() {
+      if (inactivityTimer) clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        redirectToLogin();
+      }, INACTIVITY_MS);
+    }
+    const activityEvents = ['mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
+    activityEvents.forEach((ev) => {
+      document.addEventListener(ev, resetInactivityTimer, { passive: true });
+    });
+    resetInactivityTimer();
+
     const adminLabel = document.getElementById('admin-user-label');
     const teacherName = window.localStorage.getItem('teacherName') || 'Admin';
     adminLabel.textContent = `Logged in as ${teacherName}`;
@@ -1229,10 +1269,7 @@
     const logoutBtn = document.getElementById('admin-logout-btn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => {
-        window.localStorage.removeItem('authToken');
-        window.localStorage.removeItem('teacherName');
-        window.localStorage.removeItem('teacherAccess');
-        window.location.href = '/admin/login.html';
+        redirectToLogin();
       });
     }
 
