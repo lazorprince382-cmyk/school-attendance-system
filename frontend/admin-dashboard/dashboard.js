@@ -89,22 +89,228 @@
   const qrGrid = document.getElementById('qr-grid');
   const childrenTableBody = document.getElementById('children-table-body');
 
+  const MAX_PHOTO_BYTES = 1000000;
+  const registerHolderBlobs = [null, null, null];
+  const registerPendingUrls = [null, null, null];
+  const registerPendingSource = [null, null, null];
+
+  function compressImage(fileOrBlob) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = fileOrBlob instanceof Blob ? URL.createObjectURL(fileOrBlob) : null;
+      img.onload = () => {
+        if (url) URL.revokeObjectURL(url);
+        const canvas = document.createElement('canvas');
+        let w = img.width;
+        let h = img.height;
+        const maxDim = 1200;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        let quality = 0.88;
+        const tryBlob = () => {
+          canvas.toBlob(
+            (blob) => {
+              if (blob && blob.size <= MAX_PHOTO_BYTES) {
+                resolve(blob);
+                return;
+              }
+              if (quality <= 0.3) {
+                resolve(blob || new Blob([]));
+                return;
+              }
+              quality -= 0.15;
+              tryBlob();
+            },
+            'image/jpeg',
+            quality
+          );
+        };
+        tryBlob();
+      };
+      img.onerror = () => {
+        if (url) URL.revokeObjectURL(url);
+        reject(new Error('Failed to load image'));
+      };
+      img.src = url || fileOrBlob;
+    });
+  }
+
+  function getRegisterPreviewEl(slotIndex) {
+    return document.getElementById('register-holder-preview-' + slotIndex);
+  }
+  function getRegisterConfirmEl(slotIndex) {
+    return document.getElementById('register-holder-confirm-' + slotIndex);
+  }
+  function setRegisterSlotPreview(slotIndex, blobOrNull) {
+    const preview = getRegisterPreviewEl(slotIndex);
+    if (!preview) return;
+    const oldUrl = registerPendingUrls[slotIndex];
+    if (oldUrl) {
+      URL.revokeObjectURL(oldUrl);
+      registerPendingUrls[slotIndex] = null;
+    }
+    preview.innerHTML = '';
+    if (blobOrNull) {
+      const url = URL.createObjectURL(blobOrNull);
+      registerPendingUrls[slotIndex] = url;
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = 'Holder ' + (slotIndex + 1);
+      preview.appendChild(img);
+    }
+  }
+  function clearRegisterSlot(slotIndex) {
+    registerHolderBlobs[slotIndex] = null;
+    const url = registerPendingUrls[slotIndex];
+    if (url) {
+      URL.revokeObjectURL(url);
+      registerPendingUrls[slotIndex] = null;
+    }
+    registerPendingSource[slotIndex] = null;
+    setRegisterSlotPreview(slotIndex, null);
+    getRegisterConfirmEl(slotIndex).setAttribute('hidden', '');
+    const fileInput = document.querySelector('.holder-register-file[data-slot="' + slotIndex + '"]');
+    if (fileInput) fileInput.value = '';
+  }
+
+  document.querySelectorAll('.holder-register-file').forEach((input) => {
+    const slotIndex = parseInt(input.getAttribute('data-slot'), 10);
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      registerPendingSource[slotIndex] = file;
+      setRegisterSlotPreview(slotIndex, file);
+      getRegisterConfirmEl(slotIndex).removeAttribute('hidden');
+    });
+  });
+  document.querySelectorAll('.btn-done-photo').forEach((btn) => {
+    const slotIndex = parseInt(btn.getAttribute('data-slot'), 10);
+    btn.addEventListener('click', async () => {
+      const source = registerPendingSource[slotIndex];
+      if (!source) return;
+      setStatus(registerChildStatus, 'Compressing...', 'info');
+      try {
+        const blob = await compressImage(source);
+        registerHolderBlobs[slotIndex] = blob;
+        setRegisterSlotPreview(slotIndex, blob);
+        registerPendingSource[slotIndex] = null;
+        getRegisterConfirmEl(slotIndex).setAttribute('hidden', '');
+        const fileInput = document.querySelector('.holder-register-file[data-slot="' + slotIndex + '"]');
+        if (fileInput) fileInput.value = '';
+        setStatus(registerChildStatus, 'Photo set for Holder ' + (slotIndex + 1) + '.', 'success');
+        setTimeout(() => setStatus(registerChildStatus, '', ''), 1500);
+      } catch (err) {
+        setStatus(registerChildStatus, 'Failed to process photo.', 'error');
+      }
+    });
+  });
+  document.querySelectorAll('.btn-cancel-photo').forEach((btn) => {
+    const slotIndex = parseInt(btn.getAttribute('data-slot'), 10);
+    btn.addEventListener('click', () => clearRegisterSlot(slotIndex));
+  });
+
+  const cameraCaptureModal = document.getElementById('camera-capture-modal');
+  const cameraVideo = document.getElementById('camera-video');
+  const cameraCaptureBtn = document.getElementById('camera-capture-btn');
+  const cameraCaptureCancel = document.getElementById('camera-capture-cancel');
+  let cameraStream = null;
+  let cameraSlotIndex = null;
+
+  function stopCameraStream() {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((t) => t.stop());
+      cameraStream = null;
+    }
+    if (cameraVideo) cameraVideo.srcObject = null;
+  }
+  document.querySelectorAll('.btn-camera').forEach((btn) => {
+    const slotIndex = parseInt(btn.getAttribute('data-slot'), 10);
+    btn.addEventListener('click', async () => {
+      cameraSlotIndex = slotIndex;
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+        if (cameraVideo) cameraVideo.srcObject = cameraStream;
+        if (cameraCaptureModal) {
+          cameraCaptureModal.setAttribute('aria-hidden', 'false');
+          cameraCaptureModal.classList.add('modal-open');
+        }
+      } catch (err) {
+        setStatus(registerChildStatus, 'Camera access denied or not available.', 'error');
+      }
+    });
+  });
+  if (cameraCaptureCancel) {
+    cameraCaptureCancel.addEventListener('click', () => {
+      stopCameraStream();
+      cameraSlotIndex = null;
+      if (cameraCaptureModal) {
+        cameraCaptureModal.setAttribute('aria-hidden', 'true');
+        cameraCaptureModal.classList.remove('modal-open');
+      }
+    });
+  }
+  if (cameraCaptureBtn) {
+    cameraCaptureBtn.addEventListener('click', () => {
+      if (!cameraVideo || !cameraStream || cameraSlotIndex == null) return;
+      const canvas = document.createElement('canvas');
+      canvas.width = cameraVideo.videoWidth;
+      canvas.height = cameraVideo.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(cameraVideo, 0, 0);
+      canvas.toBlob((blob) => {
+        stopCameraStream();
+        if (cameraCaptureModal) {
+          cameraCaptureModal.setAttribute('aria-hidden', 'true');
+          cameraCaptureModal.classList.remove('modal-open');
+        }
+        if (blob && cameraSlotIndex != null) {
+          const slot = cameraSlotIndex;
+          cameraSlotIndex = null;
+          registerPendingSource[slot] = blob;
+          setRegisterSlotPreview(slot, blob);
+          getRegisterConfirmEl(slot).removeAttribute('hidden');
+        }
+      }, 'image/jpeg', 0.9);
+    });
+  }
+  if (cameraCaptureModal) {
+    cameraCaptureModal.addEventListener('click', (e) => {
+      if (e.target === cameraCaptureModal) {
+        stopCameraStream();
+        cameraSlotIndex = null;
+        cameraCaptureModal.setAttribute('aria-hidden', 'true');
+        cameraCaptureModal.classList.remove('modal-open');
+      }
+    });
+  }
+
   registerChildForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const p1 = holderPhoto1.files?.[0];
-    const p2 = holderPhoto2.files?.[0];
-    const p3 = holderPhoto3.files?.[0];
+    const p1 = registerHolderBlobs[0];
+    const p2 = registerHolderBlobs[1];
+    const p3 = registerHolderBlobs[2];
     if (!p1 && !p2 && !p3) {
-      setStatus(registerChildStatus, 'Please select at least one holder photo.', 'error');
+      setStatus(registerChildStatus, 'Add at least one holder photo and click Done to confirm.', 'error');
       return;
     }
     const formData = new FormData();
     formData.append('fullName', (childFullNameInput.value || '').trim());
     formData.append('class', (childClassInput.value || '').trim());
     formData.append('parentPhone', (childParentPhoneInput.value || '').trim());
-    if (p1) formData.append('photo1', p1);
-    if (p2) formData.append('photo2', p2);
-    if (p3) formData.append('photo3', p3);
+    if (p1) formData.append('photo1', p1, 'holder-1.jpg');
+    if (p2) formData.append('photo2', p2, 'holder-2.jpg');
+    if (p3) formData.append('photo3', p3, 'holder-3.jpg');
     try {
       setStatus(registerChildStatus, 'Registering child...', 'info');
       const resp = await fetch('/api/children/register-with-pickers', {
@@ -124,6 +330,7 @@
       holderPhoto1.value = '';
       holderPhoto2.value = '';
       holderPhoto3.value = '';
+      for (let i = 0; i < 3; i++) clearRegisterSlot(i);
       await loadChildren();
       qrGrid.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (err) {

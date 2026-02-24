@@ -70,17 +70,41 @@
                     <label for="child-parent-phone-input">Parent’s phone number</label>
                     <input id="child-parent-phone-input" type="tel" placeholder="+2567XXXXXXXX" />
                   </div>
-                  <div class="full-width">
+                  <div class="full-width register-holder-slot" data-slot="0">
                     <label>Holder 1 photo <span class="required-dot">(at least one required)</span></label>
-                    <input type="file" id="holder-photo-1" accept="image/*" />
+                    <div class="holder-register-preview" id="register-holder-preview-0"></div>
+                    <div class="holder-register-actions">
+                      <input type="file" id="holder-photo-1" accept="image/*" class="holder-register-file" data-slot="0" />
+                      <button type="button" class="btn-secondary btn-camera" data-slot="0">Take photo</button>
+                    </div>
+                    <div class="holder-register-confirm" id="register-holder-confirm-0" hidden>
+                      <button type="button" class="btn-primary btn-done-photo" data-slot="0">Done</button>
+                      <button type="button" class="btn-secondary btn-cancel-photo" data-slot="0">Cancel</button>
+                    </div>
                   </div>
-                  <div class="full-width">
+                  <div class="full-width register-holder-slot" data-slot="1">
                     <label>Holder 2 photo <span class="muted">(optional)</span></label>
-                    <input type="file" id="holder-photo-2" accept="image/*" />
+                    <div class="holder-register-preview" id="register-holder-preview-1"></div>
+                    <div class="holder-register-actions">
+                      <input type="file" id="holder-photo-2" accept="image/*" class="holder-register-file" data-slot="1" />
+                      <button type="button" class="btn-secondary btn-camera" data-slot="1">Take photo</button>
+                    </div>
+                    <div class="holder-register-confirm" id="register-holder-confirm-1" hidden>
+                      <button type="button" class="btn-primary btn-done-photo" data-slot="1">Done</button>
+                      <button type="button" class="btn-secondary btn-cancel-photo" data-slot="1">Cancel</button>
+                    </div>
                   </div>
-                  <div class="full-width">
+                  <div class="full-width register-holder-slot" data-slot="2">
                     <label>Holder 3 photo <span class="muted">(optional)</span></label>
-                    <input type="file" id="holder-photo-3" accept="image/*" />
+                    <div class="holder-register-preview" id="register-holder-preview-2"></div>
+                    <div class="holder-register-actions">
+                      <input type="file" id="holder-photo-3" accept="image/*" class="holder-register-file" data-slot="2" />
+                      <button type="button" class="btn-secondary btn-camera" data-slot="2">Take photo</button>
+                    </div>
+                    <div class="holder-register-confirm" id="register-holder-confirm-2" hidden>
+                      <button type="button" class="btn-primary btn-done-photo" data-slot="2">Done</button>
+                      <button type="button" class="btn-secondary btn-cancel-photo" data-slot="2">Cancel</button>
+                    </div>
                   </div>
                 </div>
                 <div class="mt">
@@ -353,6 +377,20 @@
           </div>
         </form>
         <div class="status" id="edit-child-status"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="camera-capture-modal" aria-hidden="true">
+      <div class="modal-box modal-camera">
+        <h2>Take photo</h2>
+        <p class="small">Position the person in the frame, then tap Capture.</p>
+        <div class="camera-video-wrap">
+          <video id="camera-video" autoplay playsinline muted></video>
+        </div>
+        <div class="modal-actions mt">
+          <button type="button" class="btn-secondary" id="camera-capture-cancel">Cancel</button>
+          <button type="button" class="btn-primary" id="camera-capture-btn">Capture</button>
+        </div>
       </div>
     </div>
 
