@@ -2,6 +2,7 @@
   const tabs = document.querySelectorAll('.tab');
   const sections = {
     children: document.getElementById('tab-children'),
+    'all-children': document.getElementById('tab-all-children'),
     attendance: document.getElementById('tab-attendance'),
     history: document.getElementById('tab-history'),
     teachers: document.getElementById('tab-teachers'),
@@ -53,6 +54,7 @@
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => {
       switchTab(tab.dataset.tab);
+      if (tab.dataset.tab === 'all-children') loadChildren();
       if (tab.dataset.tab === 'history') loadHistoryDates();
       if (tab.dataset.tab === 'export') loadExportHistoryDates();
     });
