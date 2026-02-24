@@ -709,11 +709,24 @@
       row.className = 'hidden-qr-row';
       const fullName = `${(c.first_name || '').trim()} ${(c.last_name || '').trim()}`.trim() || '—';
       const className = (c.class_name || '').trim() || '—';
+      const notDownloaded = !qrGridDownloadedIds.has(Number(c.id));
+      const dotHtml = notDownloaded ? '<span class="hidden-qr-dot" aria-label="Not yet downloaded"></span>' : '';
       row.innerHTML = `
-        <span class="hidden-qr-name">${escapeHtml(fullName)}</span>
+        <span class="hidden-qr-name-wrap">
+          ${dotHtml}
+          <span class="hidden-qr-name">${escapeHtml(fullName)}</span>
+        </span>
         <span class="hidden-qr-class">${escapeHtml(className)}</span>
+        <button type="button" class="btn-secondary btn-small btn-download-hidden-qr" data-id="${c.id}">Download</button>
         <button type="button" class="btn-primary btn-small btn-unhide-qr" data-id="${c.id}">Unhide</button>
       `;
+      const downloadBtn = row.querySelector('.btn-download-hidden-qr');
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+          downloadQrForChild(c);
+          renderHiddenQrList();
+        });
+      }
       const unhideBtn = row.querySelector('.btn-unhide-qr');
       if (unhideBtn) {
         unhideBtn.addEventListener('click', () => {

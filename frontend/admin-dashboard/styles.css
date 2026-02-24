@@ -1167,8 +1167,21 @@ html[data-theme="dark"] .btn-remove-photo {
 .hidden-qr-row:last-child {
   border-bottom: none;
 }
-.hidden-qr-name {
+.hidden-qr-name-wrap {
   flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.hidden-qr-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #dc2626;
+}
+.hidden-qr-name {
   min-width: 0;
   font-weight: 500;
 }
