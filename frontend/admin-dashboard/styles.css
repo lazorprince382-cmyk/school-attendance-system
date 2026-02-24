@@ -371,12 +371,25 @@ tr:nth-child(even) {
 }
 
 .qr-item {
+  position: relative;
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 0.5rem;
   background-color: var(--bg-card);
   text-align: center;
   transition: background 0.25s ease, border-color 0.25s ease;
+}
+.qr-dot-not-downloaded {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #dc2626;
+  flex-shrink: 0;
+  z-index: 1;
+  box-shadow: 0 0 0 2px var(--bg-card);
 }
 
 .qr-label {

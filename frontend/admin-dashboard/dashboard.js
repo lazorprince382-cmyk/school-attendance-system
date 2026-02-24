@@ -344,7 +344,9 @@
   let currentChildren = [];
 
   const STORAGE_KEY_QR_HIDDEN = 'adminQrGridHiddenIds';
+  const STORAGE_KEY_QR_DOWNLOADED = 'adminQrDownloadedIds';
   let qrGridHiddenIds = new Set();
+  let qrGridDownloadedIds = new Set();
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY_QR_HIDDEN);
     if (stored) {
@@ -352,10 +354,22 @@
       if (Array.isArray(arr)) qrGridHiddenIds = new Set(arr.map(Number).filter((n) => !Number.isNaN(n)));
     }
   } catch (_) {}
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY_QR_DOWNLOADED);
+    if (stored) {
+      const arr = JSON.parse(stored);
+      if (Array.isArray(arr)) qrGridDownloadedIds = new Set(arr.map(Number).filter((n) => !Number.isNaN(n)));
+    }
+  } catch (_) {}
 
   function saveQrGridHidden() {
     try {
       window.localStorage.setItem(STORAGE_KEY_QR_HIDDEN, JSON.stringify(Array.from(qrGridHiddenIds)));
+    } catch (_) {}
+  }
+  function saveQrGridDownloaded() {
+    try {
+      window.localStorage.setItem(STORAGE_KEY_QR_DOWNLOADED, JSON.stringify(Array.from(qrGridDownloadedIds)));
     } catch (_) {}
   }
 
@@ -406,6 +420,8 @@
       const dataUrl = canvas.toDataURL('image/png');
       const safeName = `${child.first_name}-${child.last_name}-${child.class_name || 'N'}`.replace(/\s+/g, '-');
       triggerDownload(dataUrl, safeName);
+      qrGridDownloadedIds.add(Number(child.id));
+      saveQrGridDownloaded();
     }
     document.body.removeChild(div);
   }
@@ -548,6 +564,10 @@
       dataUrl = img.src;
     }
     function afterDownload() {
+      if (childId != null) {
+        qrGridDownloadedIds.add(Number(childId));
+        saveQrGridDownloaded();
+      }
       if (typeof onDone === 'function') onDone();
       loadChildren();
     }
@@ -586,6 +606,14 @@
     toShow.forEach((c) => {
       const item = document.createElement('div');
       item.className = 'qr-item';
+      const notDownloaded = !qrGridDownloadedIds.has(Number(c.id));
+      if (notDownloaded) {
+        item.classList.add('qr-item-not-downloaded');
+        const dot = document.createElement('span');
+        dot.className = 'qr-dot-not-downloaded';
+        dot.setAttribute('aria-label', 'Not yet downloaded');
+        item.appendChild(dot);
+      }
       const qrCodeContainer = document.createElement('div');
       qrCodeContainer.className = 'qr-code-container';
       qrCodeContainer.style.width = '200px';
