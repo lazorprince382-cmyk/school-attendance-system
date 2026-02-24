@@ -580,8 +580,25 @@
             nameInput.value = displayName;
           }
         });
+        // Always show all 3 slots so user can add the third holder if they only had 2
         for (let i = sorted.length; i < 3; i++) {
-          if (slots[i]) slots[i].style.display = 'none';
+          if (!slots[i]) continue;
+          const wrap = slots[i].querySelector('.holder-thumb-wrap');
+          const thumb = slots[i].querySelector('.holder-thumb');
+          const nameInput = slots[i].querySelector('.holder-name-input');
+          const existingPlaceholder = wrap && wrap.querySelector('.holder-thumb-placeholder');
+          if (existingPlaceholder) existingPlaceholder.remove();
+          if (thumb) {
+            thumb.src = '';
+            thumb.style.display = 'none';
+            if (wrap) {
+              const span = document.createElement('span');
+              span.className = 'holder-thumb-placeholder';
+              span.textContent = 'No photo';
+              wrap.appendChild(span);
+            }
+          }
+          if (nameInput) nameInput.value = '';
         }
       })
       .catch((err) => {
@@ -619,6 +636,64 @@
       if (e.target === editChildModal) closeEditChildModal();
     });
   }
+
+  holderPhotosEdit.addEventListener('click', (e) => {
+    const removeBtn = e.target.closest('.btn-remove-photo');
+    if (!removeBtn) return;
+    const slot = removeBtn.closest('.holder-edit-slot');
+    if (!slot) return;
+    const pickerId = slot.getAttribute('data-picker-id');
+    const thumb = slot.querySelector('.holder-thumb');
+    const wrap = slot.querySelector('.holder-thumb-wrap');
+    const fileInput = slot.querySelector('.holder-replace-input');
+    const nameInput = slot.querySelector('.holder-name-input');
+    const holderName = (nameInput && nameInput.value) ? String(nameInput.value).trim() : null;
+    const slotIndex = parseInt(slot.getAttribute('data-slot'), 10);
+    const displayName = holderName || `Holder ${(slotIndex + 1)}`;
+
+    function clearSlotPhoto() {
+      if (thumb && thumb.dataset.revokeUrl) {
+        URL.revokeObjectURL(thumb.dataset.revokeUrl);
+        delete thumb.dataset.revokeUrl;
+      }
+      if (fileInput) fileInput.value = '';
+      if (thumb) {
+        thumb.src = '';
+        thumb.style.display = 'none';
+      }
+      const existingPlaceholder = wrap && wrap.querySelector('.holder-thumb-placeholder');
+      if (existingPlaceholder) existingPlaceholder.remove();
+      if (wrap) {
+        const span = document.createElement('span');
+        span.className = 'holder-thumb-placeholder';
+        span.textContent = 'No photo';
+        wrap.appendChild(span);
+      }
+    }
+
+    if (editingChildId != null && pickerId) {
+      setStatus(editChildStatus, 'Removing photo...', 'info');
+      const fd = new FormData();
+      fd.append('name', displayName);
+      fd.append('photoUrl', '');
+      fetch(`/api/children/${editingChildId}/pickers/${pickerId}`, {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + getToken() },
+        body: fd,
+      })
+        .then((pr) => {
+          if (!pr.ok) return pr.json().then((j) => Promise.reject(j));
+          clearSlotPhoto();
+          setStatus(editChildStatus, 'Photo removed.', 'success');
+          setTimeout(() => setStatus(editChildStatus, '', ''), 2000);
+        })
+        .catch((j) => {
+          setStatus(editChildStatus, (j && j.error) || 'Failed to remove photo.', 'error');
+        });
+    } else {
+      clearSlotPhoto();
+    }
+  });
 
   holderPhotosEdit.addEventListener('change', (e) => {
     const fileInput = e.target.closest('.holder-edit-slot') && e.target.classList.contains('holder-replace-input') ? e.target : null;
@@ -676,25 +751,44 @@
         for (let i = 0; i < slots.length; i++) {
           const slot = slots[i];
           const pickerId = slot.getAttribute('data-picker-id');
-          if (!pickerId) continue;
           const fileInput = slot.querySelector('.holder-replace-input');
           const nameInput = slot.querySelector('.holder-name-input');
-          const fd = new FormData();
-          fd.append('pickerIndex', String(i));
           const holderName = (nameInput && nameInput.value) ? String(nameInput.value).trim() : `Holder ${i + 1}`;
-          fd.append('name', holderName || `Holder ${i + 1}`);
-          if (fileInput && fileInput.files && fileInput.files[0]) {
-            fd.append('photo', fileInput.files[0]);
-          }
-          const pr = await fetch(`/api/children/${editingChildId}/pickers/${pickerId}`, {
-            method: 'PUT',
-            headers: { Authorization: 'Bearer ' + getToken() },
-            body: fd,
-          });
-          if (!pr.ok) {
-            const j = await pr.json().catch(() => ({}));
-            setStatus(editChildStatus, j.error || 'Failed to update holder.', 'error');
-            return;
+
+          if (pickerId) {
+            const fd = new FormData();
+            fd.append('pickerIndex', String(i));
+            fd.append('name', holderName || `Holder ${i + 1}`);
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+              fd.append('photo', fileInput.files[0]);
+            }
+            const pr = await fetch(`/api/children/${editingChildId}/pickers/${pickerId}`, {
+              method: 'PUT',
+              headers: { Authorization: 'Bearer ' + getToken() },
+              body: fd,
+            });
+            if (!pr.ok) {
+              const j = await pr.json().catch(() => ({}));
+              setStatus(editChildStatus, j.error || 'Failed to update holder.', 'error');
+              return;
+            }
+          } else {
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+              const fd = new FormData();
+              fd.append('pickerIndex', String(i));
+              fd.append('name', holderName || `Holder ${i + 1}`);
+              fd.append('photo', fileInput.files[0]);
+              const pr = await fetch(`/api/children/${editingChildId}/pickers`, {
+                method: 'POST',
+                headers: { Authorization: 'Bearer ' + getToken() },
+                body: fd,
+              });
+              if (!pr.ok) {
+                const j = await pr.json().catch(() => ({}));
+                setStatus(editChildStatus, j.error || 'Failed to add holder.', 'error');
+                return;
+              }
+            }
           }
         }
         setStatus(editChildStatus, 'Child updated.', 'success');

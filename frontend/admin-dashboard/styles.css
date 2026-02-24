@@ -537,7 +537,10 @@ html[data-theme="dark"] body.login-page {
 .login-badge {
   width: 180px;
   height: auto;
+  max-height: 180px;
   display: block;
+  object-fit: contain;
+  object-position: center;
 }
 
 /* Glowing border wrapper: badge colors around the form */
@@ -833,6 +836,39 @@ html:not([data-theme="dark"]) .theme-toggle .icon-moon {
   padding: 0.35rem 0.5rem;
   border: 1px solid #e2e8f0;
   border-radius: 0.35rem;
+}
+.holder-photo-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+.holder-photo-actions .holder-replace-input {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 0.8rem;
+  padding: 0.25rem;
+}
+.btn-remove-photo {
+  flex-shrink: 0;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-input);
+  background: var(--btn-secondary-bg);
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-remove-photo:hover {
+  background: var(--btn-secondary-hover);
+}
+html[data-theme="dark"] .btn-remove-photo {
+  color: #f87171;
+  border-color: #64748b;
 }
 .holder-edit-slot .holder-replace-input {
   font-size: 0.8rem;
