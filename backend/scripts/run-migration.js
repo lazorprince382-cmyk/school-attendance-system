@@ -24,6 +24,12 @@ async function main() {
     `);
     console.log('Migration: attendance_logs.picker_id column is ready.');
 
+    await query(`
+      ALTER TABLE children
+      ADD COLUMN IF NOT EXISTS qr_hidden BOOLEAN NOT NULL DEFAULT false
+    `);
+    console.log('Migration: children.qr_hidden column is ready.');
+
     console.log('All migrations completed.');
   } catch (err) {
     console.error('Migration failed:', err.message);

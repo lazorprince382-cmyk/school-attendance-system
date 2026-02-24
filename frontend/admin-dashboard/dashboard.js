@@ -186,16 +186,170 @@
     if (fileInput) fileInput.value = '';
   }
 
+  function openCropModal(slotIndex, fileOrBlob) {
+    const modal = document.getElementById('crop-photo-modal');
+    const viewport = document.getElementById('crop-photo-viewport');
+    const wrap = document.getElementById('crop-photo-img-wrap');
+    const img = document.getElementById('crop-photo-img');
+    if (!modal || !wrap || !img) return;
+    const url = fileOrBlob instanceof Blob ? URL.createObjectURL(fileOrBlob) : null;
+    let cropSlotIndex = slotIndex;
+    let cropUrl = url;
+    let pos = { x: 0, y: 0 };
+    let dragStart = null;
+
+    function closeCropModal() {
+      if (cropUrl) URL.revokeObjectURL(cropUrl);
+      modal.setAttribute('aria-hidden', 'true');
+      modal.classList.remove('modal-open');
+    }
+
+    img.onload = function () {
+      const nw = img.naturalWidth;
+      const nh = img.naturalHeight;
+      const v = 280;
+      let dw = nw;
+      let dh = nh;
+      if (dw > 400 || dh > 400) {
+        const r = Math.min(400 / dw, 400 / dh);
+        dw = Math.round(dw * r);
+        dh = Math.round(dh * r);
+      }
+      if (dw < v) dw = v;
+      if (dh < v) dh = v;
+      img.style.width = dw + 'px';
+      img.style.height = dh + 'px';
+      wrap.style.width = dw + 'px';
+      wrap.style.height = dh + 'px';
+      pos.x = (v - dw) / 2;
+      pos.y = (v - dh) / 2;
+      wrap.style.left = pos.x + 'px';
+      wrap.style.top = pos.y + 'px';
+    };
+    img.src = cropUrl;
+
+    wrap.onmousedown = (e) => {
+      e.preventDefault();
+      dragStart = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+      wrap.classList.add('dragging');
+    };
+    wrap.ontouchstart = (e) => {
+      e.preventDefault();
+      const t = e.touches[0];
+      dragStart = { x: t.clientX - pos.x, y: t.clientY - pos.y };
+      wrap.classList.add('dragging');
+    };
+    const move = (clientX, clientY) => {
+      if (!dragStart) return;
+      pos.x = clientX - dragStart.x;
+      pos.y = clientY - dragStart.y;
+      const v = 280;
+      const dw = parseFloat(wrap.style.width) || v;
+      const dh = parseFloat(wrap.style.height) || v;
+      pos.x = Math.min(0, Math.max(v - dw, pos.x));
+      pos.y = Math.min(0, Math.max(v - dh, pos.y));
+      wrap.style.left = pos.x + 'px';
+      wrap.style.top = pos.y + 'px';
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onUp);
+    function onMove(e) {
+      if (dragStart) move(e.clientX, e.clientY);
+    }
+    function onTouchMove(e) {
+      if (dragStart && e.touches.length) {
+        e.preventDefault();
+        move(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }
+    function onUp() {
+      dragStart = null;
+      wrap.classList.remove('dragging');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onUp);
+      wrap.onmousedown = null;
+      wrap.ontouchstart = null;
+    }
+
+    document.getElementById('crop-photo-cancel').onclick = () => { onUp(); closeCropModal(); };
+    document.getElementById('crop-photo-done').onclick = async () => {
+      onUp();
+      const v = 280;
+      const dw = parseFloat(wrap.style.width) || v;
+      const dh = parseFloat(wrap.style.height) || v;
+      const nw = img.naturalWidth;
+      const nh = img.naturalHeight;
+      const srcX = (-pos.x / dw) * nw;
+      const srcY = (-pos.y / dh) * nh;
+      const srcW = (v / dw) * nw;
+      const srcH = (v / dh) * nh;
+      const canvas = document.createElement('canvas');
+      canvas.width = v;
+      canvas.height = v;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, v, v);
+      canvas.toBlob(async (blob) => {
+        if (!blob) { closeCropModal(); return; }
+        try {
+          setStatus(registerChildStatus, 'Compressing...', 'info');
+          const compressed = await compressImage(blob);
+          registerHolderBlobs[cropSlotIndex] = compressed;
+          setRegisterSlotPreview(cropSlotIndex, compressed);
+          const fileInput = document.querySelector('.holder-register-file[data-slot="' + cropSlotIndex + '"]');
+          if (fileInput) fileInput.value = '';
+          setStatus(registerChildStatus, 'Photo set for Holder ' + (cropSlotIndex + 1) + '.', 'success');
+          setTimeout(() => setStatus(registerChildStatus, '', ''), 1500);
+        } catch (e) {
+          setStatus(registerChildStatus, 'Failed to process photo.', 'error');
+        }
+        closeCropModal();
+      }, 'image/jpeg', 0.9);
+    };
+
+    modal.addEventListener('click', function onClickOverlay(e) {
+      if (e.target === modal) {
+        modal.removeEventListener('click', onClickOverlay);
+        onUp();
+        closeCropModal();
+      }
+    });
+    modal.setAttribute('aria-hidden', 'false');
+    modal.classList.add('modal-open');
+  }
+
   document.querySelectorAll('.holder-register-file').forEach((input) => {
     const slotIndex = parseInt(input.getAttribute('data-slot'), 10);
     input.addEventListener('change', () => {
       const file = input.files && input.files[0];
       if (!file) return;
-      registerPendingSource[slotIndex] = file;
-      setRegisterSlotPreview(slotIndex, file);
-      getRegisterConfirmEl(slotIndex).removeAttribute('hidden');
+      openCropModal(slotIndex, file);
     });
   });
+
+  document.querySelectorAll('.holder-register-preview').forEach((el) => {
+    const slotIndex = parseInt(el.getAttribute('data-slot'), 10);
+    el.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.add('drag-over');
+    });
+    el.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      if (!el.contains(e.relatedTarget)) el.classList.remove('drag-over');
+    });
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.remove('drag-over');
+      const file = Array.from(e.dataTransfer.files || []).find((f) => f.type.startsWith('image/'));
+      if (file) openCropModal(slotIndex, file);
+    });
+  });
+
   document.querySelectorAll('.btn-done-photo').forEach((btn) => {
     const slotIndex = parseInt(btn.getAttribute('data-slot'), 10);
     btn.addEventListener('click', async () => {
@@ -279,9 +433,7 @@
         if (blob && cameraSlotIndex != null) {
           const slot = cameraSlotIndex;
           cameraSlotIndex = null;
-          registerPendingSource[slot] = blob;
-          setRegisterSlotPreview(slot, blob);
-          getRegisterConfirmEl(slot).removeAttribute('hidden');
+          openCropModal(slot, blob);
         }
       }, 'image/jpeg', 0.9);
     });
@@ -348,13 +500,6 @@
   let qrGridHiddenIds = new Set();
   let qrGridDownloadedIds = new Set();
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY_QR_HIDDEN);
-    if (stored) {
-      const arr = JSON.parse(stored);
-      if (Array.isArray(arr)) qrGridHiddenIds = new Set(arr.map(Number).filter((n) => !Number.isNaN(n)));
-    }
-  } catch (_) {}
-  try {
     const stored = window.localStorage.getItem(STORAGE_KEY_QR_DOWNLOADED);
     if (stored) {
       const arr = JSON.parse(stored);
@@ -362,10 +507,13 @@
     }
   } catch (_) {}
 
-  function saveQrGridHidden() {
-    try {
-      window.localStorage.setItem(STORAGE_KEY_QR_HIDDEN, JSON.stringify(Array.from(qrGridHiddenIds)));
-    } catch (_) {}
+  async function setChildQrHiddenOnServer(childId, hidden) {
+    const resp = await fetch(`/api/children/${childId}/qr-hidden`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ hidden }),
+    });
+    if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || 'Failed to update');
   }
   function saveQrGridDownloaded() {
     try {
@@ -383,6 +531,7 @@
       });
       const children = await resp.json();
       currentChildren = children || [];
+      qrGridHiddenIds = new Set((children || []).filter((c) => c && c.qr_hidden === true).map((c) => Number(c.id)));
       updateChildrenFilterClassOptions();
       renderChildrenTable();
       renderQrGrid(currentChildren);
@@ -633,13 +782,16 @@
       deleteBtn.type = 'button';
       deleteBtn.className = 'btn-delete-qr';
       deleteBtn.textContent = 'Delete';
-      deleteBtn.addEventListener('click', () => {
+      deleteBtn.addEventListener('click', async () => {
         const name = `${c.first_name} ${c.last_name}`.trim();
         if (!window.confirm('Remove this QR from the grid? The child stays in the system. You can show it again with "Show hidden".')) return;
-        qrGridHiddenIds.add(Number(c.id));
-        saveQrGridHidden();
-        renderQrGrid(currentChildren);
-        updateShowHiddenBtn();
+        try {
+          await setChildQrHiddenOnServer(c.id, true);
+          await loadChildren();
+          updateShowHiddenBtn();
+        } catch (err) {
+          setStatus(registerChildStatus, err.message || 'Failed to hide QR.', 'error');
+        }
       });
       item.appendChild(qrCodeContainer);
       item.appendChild(label);
@@ -729,13 +881,16 @@
       }
       const unhideBtn = row.querySelector('.btn-unhide-qr');
       if (unhideBtn) {
-        unhideBtn.addEventListener('click', () => {
-          qrGridHiddenIds.delete(Number(c.id));
-          saveQrGridHidden();
-          renderQrGrid(currentChildren);
-          updateShowHiddenBtn();
-          renderHiddenQrList();
-          if (qrGridHiddenIds.size === 0) closeHiddenQrModal();
+        unhideBtn.addEventListener('click', async () => {
+          try {
+            await setChildQrHiddenOnServer(c.id, false);
+            await loadChildren();
+            updateShowHiddenBtn();
+            renderHiddenQrList();
+            if (qrGridHiddenIds.size === 0) closeHiddenQrModal();
+          } catch (err) {
+            setStatus(registerChildStatus, err.message || 'Failed to unhide QR.', 'error');
+          }
         });
       }
       hiddenQrListEl.appendChild(row);

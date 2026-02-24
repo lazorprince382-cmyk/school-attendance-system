@@ -9,6 +9,7 @@ const {
   getChildByQr,
   updateChildById,
   deleteChildById,
+  updateChildQrHidden,
 } = require('../controllers/childController');
 const {
   pickerPhotoUpload,
@@ -26,6 +27,7 @@ router.post('/import', authMiddleware, requireAdmin, csvUploadMiddleware(), impo
 router.get('/', authMiddleware, requireAdmin, getChildren);
 router.post('/', authMiddleware, requireAdmin, createSingleChild);
 router.put('/:id', authMiddleware, requireAdmin, updateChildById);
+router.patch('/:id/qr-hidden', authMiddleware, requireAdmin, updateChildQrHidden);
 router.delete('/:id', authMiddleware, requireAdmin, deleteChildById);
 router.post('/register-with-pickers', authMiddleware, requireAdmin, registerWithPickersUpload(), registerChildWithPickers);
 

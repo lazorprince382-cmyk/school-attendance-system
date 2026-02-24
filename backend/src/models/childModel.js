@@ -60,7 +60,7 @@ async function findChildByQrPayload(payload) {
   return findChildById(childId);
 }
 
-async function updateChild(id, { firstName, lastName, className, guardianPhone }) {
+async function updateChild(id, { firstName, lastName, className, guardianPhone, qrHidden }) {
   const updates = [];
   const values = [];
   let idx = 1;
@@ -84,6 +84,11 @@ async function updateChild(id, { firstName, lastName, className, guardianPhone }
     values.push(guardianPhone);
     idx += 1;
   }
+  if (qrHidden !== undefined) {
+    updates.push(`qr_hidden = $${idx}`);
+    values.push(!!qrHidden);
+    idx += 1;
+  }
   if (updates.length === 0) {
     return findChildById(id);
   }
@@ -91,6 +96,14 @@ async function updateChild(id, { firstName, lastName, className, guardianPhone }
   const { rows } = await query(
     `UPDATE children SET ${updates.join(', ')} WHERE id = $${idx} RETURNING *`,
     values
+  );
+  return rows[0] || null;
+}
+
+async function setChildQrHidden(id, hidden) {
+  const { rows } = await query(
+    'UPDATE children SET qr_hidden = $1 WHERE id = $2 RETURNING *',
+    [!!hidden, id]
   );
   return rows[0] || null;
 }
@@ -108,5 +121,6 @@ module.exports = {
   findChildByQrPayload,
   updateChild,
   deleteChild,
+  setChildQrHidden,
 };
 

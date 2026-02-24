@@ -9,6 +9,7 @@ const {
   findChildByQrPayload,
   updateChild,
   deleteChild,
+  setChildQrHidden,
 } = require('../models/childModel');
 const { getPickersByChildId, createPicker } = require('../models/authorizedPickerModel');
 
@@ -238,6 +239,16 @@ async function deleteChildById(req, res) {
   }
 }
 
+async function updateChildQrHidden(req, res) {
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid child id' });
+  const child = await findChildById(id);
+  if (!child) return res.status(404).json({ error: 'Child not found' });
+  const hidden = req.body && req.body.hidden === true;
+  await setChildQrHidden(id, hidden);
+  return res.json({ id, qr_hidden: hidden });
+}
+
 module.exports = {
   csvUploadMiddleware,
   registerWithPickersUpload,
@@ -248,5 +259,6 @@ module.exports = {
   getChildByQr,
   updateChildById,
   deleteChildById,
+  updateChildQrHidden,
 };
 

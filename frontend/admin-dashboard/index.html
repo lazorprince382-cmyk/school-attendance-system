@@ -73,7 +73,7 @@
                   </div>
                   <div class="full-width register-holder-slot" data-slot="0">
                     <label>Holder 1 photo <span class="required-dot">(at least one required)</span></label>
-                    <div class="holder-register-preview" id="register-holder-preview-0"></div>
+                    <div class="holder-register-preview" id="register-holder-preview-0" data-slot="0" role="button" aria-label="Holder 1 photo – drop or choose file"></div>
                     <div class="holder-register-actions">
                       <input type="file" id="holder-photo-1" accept="image/*" class="holder-register-file" data-slot="0" />
                       <button type="button" class="btn-secondary btn-camera" data-slot="0">Take photo</button>
@@ -85,7 +85,7 @@
                   </div>
                   <div class="full-width register-holder-slot" data-slot="1">
                     <label>Holder 2 photo <span class="muted">(optional)</span></label>
-                    <div class="holder-register-preview" id="register-holder-preview-1"></div>
+                    <div class="holder-register-preview" id="register-holder-preview-1" data-slot="1" role="button" aria-label="Holder 2 photo – drop or choose file"></div>
                     <div class="holder-register-actions">
                       <input type="file" id="holder-photo-2" accept="image/*" class="holder-register-file" data-slot="1" />
                       <button type="button" class="btn-secondary btn-camera" data-slot="1">Take photo</button>
@@ -97,7 +97,7 @@
                   </div>
                   <div class="full-width register-holder-slot" data-slot="2">
                     <label>Holder 3 photo <span class="muted">(optional)</span></label>
-                    <div class="holder-register-preview" id="register-holder-preview-2"></div>
+                    <div class="holder-register-preview" id="register-holder-preview-2" data-slot="2" role="button" aria-label="Holder 3 photo – drop or choose file"></div>
                     <div class="holder-register-actions">
                       <input type="file" id="holder-photo-3" accept="image/*" class="holder-register-file" data-slot="2" />
                       <button type="button" class="btn-secondary btn-camera" data-slot="2">Take photo</button>
@@ -394,6 +394,22 @@
         <div class="modal-actions mt">
           <button type="button" class="btn-secondary" id="camera-capture-cancel">Cancel</button>
           <button type="button" class="btn-primary" id="camera-capture-btn">Capture</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="crop-photo-modal" aria-hidden="true">
+      <div class="modal-box modal-crop">
+        <h2>Crop photo</h2>
+        <p class="small">Drag the image to position, then click Done to use this crop.</p>
+        <div class="crop-photo-viewport" id="crop-photo-viewport">
+          <div class="crop-photo-img-wrap" id="crop-photo-img-wrap">
+            <img id="crop-photo-img" alt="Crop" />
+          </div>
+        </div>
+        <div class="modal-actions mt">
+          <button type="button" class="btn-secondary" id="crop-photo-cancel">Cancel</button>
+          <button type="button" class="btn-primary" id="crop-photo-done">Done</button>
         </div>
       </div>
     </div>
