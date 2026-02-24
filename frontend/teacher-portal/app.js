@@ -208,6 +208,8 @@
             span.className = 'picker-placeholder';
             span.textContent = 'No photo';
             photoWrap.appendChild(span);
+            const btn = slot.querySelector('.picker-select-btn');
+            if (btn) btn.style.display = 'none';
           };
           photoWrap.appendChild(img);
           photoWrap.style.cursor = 'pointer';
@@ -224,7 +226,7 @@
         if (selectBtn) {
           selectBtn.textContent = 'Select';
           selectBtn.classList.remove('is-selected');
-          selectBtn.style.display = '';
+          selectBtn.style.display = photoUrl ? '' : 'none';
         }
       } else {
         photoWrap.innerHTML = '<span class="picker-placeholder">No photo</span>';
