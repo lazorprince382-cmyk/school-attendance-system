@@ -1,7 +1,8 @@
 (function () {
   const tabs = document.querySelectorAll('.tab');
   const sections = {
-    children: document.getElementById('tab-children'),
+    'register-children': document.getElementById('tab-register-children'),
+    'qr-codes': document.getElementById('tab-qr-codes'),
     'all-children': document.getElementById('tab-all-children'),
     attendance: document.getElementById('tab-attendance'),
     history: document.getElementById('tab-history'),
@@ -54,7 +55,7 @@
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => {
       switchTab(tab.dataset.tab);
-      if (tab.dataset.tab === 'all-children') loadChildren();
+      if (tab.dataset.tab === 'qr-codes' || tab.dataset.tab === 'all-children') loadChildren();
       if (tab.dataset.tab === 'history') loadHistoryDates();
       if (tab.dataset.tab === 'export') loadExportHistoryDates();
     });
@@ -477,7 +478,7 @@
         setStatus(registerChildStatus, json.error || 'Failed to register child.', 'error');
         return;
       }
-      setStatus(registerChildStatus, 'Child registered. Their QR appears below.', 'success');
+      setStatus(registerChildStatus, 'Child registered. Their QR appears on the QR codes tab.', 'success');
       childFullNameInput.value = '';
       childClassInput.value = '';
       childParentPhoneInput.value = '';
@@ -486,6 +487,7 @@
       holderPhoto3.value = '';
       for (let i = 0; i < 3; i++) clearRegisterSlot(i);
       await loadChildren();
+      switchTab('qr-codes');
       qrGrid.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (err) {
       console.error(err);
@@ -888,6 +890,9 @@
             updateShowHiddenBtn();
             renderHiddenQrList();
             if (qrGridHiddenIds.size === 0) closeHiddenQrModal();
+            switchTab('qr-codes');
+            setStatus(registerChildStatus, 'QR is back on the grid.', 'success');
+            setTimeout(() => setStatus(registerChildStatus, '', ''), 2500);
           } catch (err) {
             setStatus(registerChildStatus, err.message || 'Failed to unhide QR.', 'error');
           }

@@ -36,7 +36,8 @@
       </header>
 
       <nav class="tabs">
-        <div class="tab active" data-tab="children">Children & QR Codes</div>
+        <div class="tab active" data-tab="register-children">Register children</div>
+        <div class="tab" data-tab="qr-codes">QR codes</div>
         <div class="tab" data-tab="all-children">All Children</div>
         <div class="tab" data-tab="attendance">Today departures</div>
         <div class="tab" data-tab="history">History departures</div>
@@ -49,11 +50,9 @@
           <span class="welcome-text">Welcome back, <span id="welcome-name">—</span>!</span>
           <span class="welcome-sub" id="welcome-sub">Ready to make today smooth?</span>
         </div>
-        <section id="tab-children" class="active">
-          <div class="two-column">
-          <div class="column">
-            <div class="card">
-              <h2>Register new child</h2>
+        <section id="tab-register-children" class="active">
+          <div class="card">
+            <h2>Register new child</h2>
               <p class="small">
                 Add a learner with their full name, class, parent phone, and three holder photos. The QR code is generated after registration; gate staff will see these photos when scanning.
               </p>
@@ -113,36 +112,34 @@
                 </div>
               </form>
               <div class="status" id="register-child-status"></div>
-            </div>
           </div>
+        </section>
 
-          <div class="column">
-            <div class="card">
-              <div class="card-header-row">
-                <div>
-                  <h2>Children & QR Codes</h2>
-                  <p class="small">
-                    One QR per learner. Gate staff scan it once to see this child and their three holder photos.
-                  </p>
-                </div>
-                <div class="header-actions">
-                  <button class="btn-secondary" id="refresh-children-btn" type="button">
-                    Refresh
-                  </button>
-                  <button class="btn-secondary" id="generate-qr-btn" type="button">
-                    Generate QRs
-                  </button>
-                  <button class="btn-secondary" id="show-hidden-qr-btn" type="button" disabled>
-                    Show hidden
-                  </button>
-                </div>
+        <section id="tab-qr-codes">
+          <div class="card">
+            <div class="card-header-row">
+              <div>
+                <h2>QR codes</h2>
+                <p class="small">
+                  One QR per learner. Gate staff scan it once to see this child and their three holder photos.
+                </p>
               </div>
-              <div class="small mt">
-                Each learner has a single QR (id + name). Scanning it loads the child and their three photos from the database.
+              <div class="header-actions">
+                <button class="btn-secondary" id="refresh-children-btn" type="button">
+                  Refresh
+                </button>
+                <button class="btn-secondary" id="generate-qr-btn" type="button">
+                  Generate QRs
+                </button>
+                <button class="btn-secondary" id="show-hidden-qr-btn" type="button" disabled>
+                  Show hidden
+                </button>
               </div>
-              <div class="qr-grid" id="qr-grid"></div>
             </div>
-          </div>
+            <div class="small mt">
+              Each learner has a single QR (id + name). Scanning it loads the child and their three photos from the database.
+            </div>
+            <div class="qr-grid" id="qr-grid"></div>
           </div>
         </section>
 
