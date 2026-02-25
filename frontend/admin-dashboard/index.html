@@ -139,6 +139,18 @@
             <div class="small mt">
               Each learner has a single QR (id + name). Scanning it loads the child and their three photos from the database.
             </div>
+            <div class="search-filter-bar mt">
+              <div class="search-filter-segment search-segment">
+                <span class="segment-label">Search</span>
+                <input type="text" id="qr-codes-search-input" class="segment-input" placeholder="By name..." autocomplete="off" />
+              </div>
+              <div class="search-filter-segment filter-segment">
+                <span class="segment-label">Filter</span>
+                <select id="qr-codes-filter-class" class="segment-select">
+                  <option value="">All classes</option>
+                </select>
+              </div>
+            </div>
             <div class="qr-grid" id="qr-grid"></div>
           </div>
         </section>

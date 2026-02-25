@@ -535,6 +535,7 @@
       currentChildren = children || [];
       qrGridHiddenIds = new Set((children || []).filter((c) => c && c.qr_hidden === true).map((c) => Number(c.id)));
       updateChildrenFilterClassOptions();
+      updateQrFilterClassOptions();
       renderChildrenTable();
       renderQrGrid(currentChildren);
     } catch (err) {
@@ -599,6 +600,21 @@
     }
   }
 
+  let qrGridSearchQuery = '';
+  let qrGridFilterClass = '';
+  function updateQrFilterClassOptions() {
+    const sel = document.getElementById('qr-codes-filter-class');
+    if (!sel) return;
+    const current = sel.value;
+    const classes = getUniqueClasses(currentChildren);
+    sel.innerHTML = '<option value="">All classes</option>' + classes.map((cls) => `<option value="${escapeHtml(cls)}">${escapeHtml(cls)}</option>`).join('');
+    if (classes.includes(current)) sel.value = current;
+    else {
+      qrGridFilterClass = '';
+      sel.value = '';
+    }
+  }
+
   function renderChildrenTable() {
     if (!childrenTableBody) return;
     childrenTableBody.innerHTML = '';
@@ -657,6 +673,21 @@
     childrenFilterClassSelect.addEventListener('change', () => {
       childrenFilterClass = (childrenFilterClassSelect.value || '').trim();
       renderChildrenTable();
+    });
+  }
+
+  const qrCodesSearchInput = document.getElementById('qr-codes-search-input');
+  const qrCodesFilterClassSelect = document.getElementById('qr-codes-filter-class');
+  if (qrCodesSearchInput) {
+    qrCodesSearchInput.addEventListener('input', () => {
+      qrGridSearchQuery = qrCodesSearchInput.value;
+      renderQrGrid(currentChildren);
+    });
+  }
+  if (qrCodesFilterClassSelect) {
+    qrCodesFilterClassSelect.addEventListener('change', () => {
+      qrGridFilterClass = (qrCodesFilterClassSelect.value || '').trim();
+      renderQrGrid(currentChildren);
     });
   }
 
@@ -752,8 +783,17 @@
     (children || []).forEach((c) => {
       if (c && c.id != null && !byId.has(c.id)) byId.set(c.id, c);
     });
-    const unique = Array.from(byId.values());
-    const toShow = unique.filter((c) => !qrGridHiddenIds.has(Number(c.id)));
+    let toShow = Array.from(byId.values()).filter((c) => !qrGridHiddenIds.has(Number(c.id)));
+    const q = (qrGridSearchQuery || '').trim().toLowerCase();
+    if (q) {
+      toShow = toShow.filter((c) => {
+        const fullName = `${(c.first_name || '').trim()} ${(c.last_name || '').trim()}`.trim().toLowerCase();
+        return fullName.includes(q);
+      });
+    }
+    if (qrGridFilterClass) {
+      toShow = toShow.filter((c) => (c.class_name || '').trim() === qrGridFilterClass);
+    }
     toShow.forEach((c) => {
       const item = document.createElement('div');
       item.className = 'qr-item';
