@@ -134,141 +134,13 @@
     if (fileInput) fileInput.value = '';
   }
 
-  function openCropModal(slotIndex, fileOrBlob) {
-    const modal = document.getElementById('crop-photo-modal');
-    const viewport = document.getElementById('crop-photo-viewport');
-    const wrap = document.getElementById('crop-photo-img-wrap');
-    const img = document.getElementById('crop-photo-img');
-    if (!modal || !wrap || !img) return;
-    const url = fileOrBlob instanceof Blob ? URL.createObjectURL(fileOrBlob) : null;
-    let cropSlotIndex = slotIndex;
-    let cropUrl = url;
-    let pos = { x: 0, y: 0 };
-    let dragStart = null;
-
-    function closeCropModal() {
-      if (cropUrl) URL.revokeObjectURL(cropUrl);
-      modal.setAttribute('aria-hidden', 'true');
-      modal.classList.remove('modal-open');
-    }
-
-    img.onload = function () {
-      const nw = img.naturalWidth;
-      const nh = img.naturalHeight;
-      const v = 280;
-      let dw = nw;
-      let dh = nh;
-      if (dw > 400 || dh > 400) {
-        const r = Math.min(400 / dw, 400 / dh);
-        dw = Math.round(dw * r);
-        dh = Math.round(dh * r);
-      }
-      if (dw < v) dw = v;
-      if (dh < v) dh = v;
-      img.style.width = dw + 'px';
-      img.style.height = dh + 'px';
-      wrap.style.width = dw + 'px';
-      wrap.style.height = dh + 'px';
-      pos.x = (v - dw) / 2;
-      pos.y = (v - dh) / 2;
-      wrap.style.left = pos.x + 'px';
-      wrap.style.top = pos.y + 'px';
-    };
-    img.src = cropUrl;
-
-    wrap.onmousedown = (e) => {
-      e.preventDefault();
-      dragStart = { x: e.clientX - pos.x, y: e.clientY - pos.y };
-      wrap.classList.add('dragging');
-    };
-    wrap.ontouchstart = (e) => {
-      e.preventDefault();
-      const t = e.touches[0];
-      dragStart = { x: t.clientX - pos.x, y: t.clientY - pos.y };
-      wrap.classList.add('dragging');
-    };
-    const move = (clientX, clientY) => {
-      if (!dragStart) return;
-      pos.x = clientX - dragStart.x;
-      pos.y = clientY - dragStart.y;
-      const v = 280;
-      const dw = parseFloat(wrap.style.width) || v;
-      const dh = parseFloat(wrap.style.height) || v;
-      pos.x = Math.min(0, Math.max(v - dw, pos.x));
-      pos.y = Math.min(0, Math.max(v - dh, pos.y));
-      wrap.style.left = pos.x + 'px';
-      wrap.style.top = pos.y + 'px';
-    };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend', onUp);
-    function onMove(e) {
-      if (dragStart) move(e.clientX, e.clientY);
-    }
-    function onTouchMove(e) {
-      if (dragStart && e.touches.length) {
-        e.preventDefault();
-        move(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    }
-    function onUp() {
-      dragStart = null;
-      wrap.classList.remove('dragging');
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend', onUp);
-      wrap.onmousedown = null;
-      wrap.ontouchstart = null;
-    }
-
-    document.getElementById('crop-photo-cancel').onclick = () => { onUp(); closeCropModal(); };
-    document.getElementById('crop-photo-done').onclick = async () => {
-      onUp();
-      const v = 280;
-      const dw = parseFloat(wrap.style.width) || v;
-      const dh = parseFloat(wrap.style.height) || v;
-      const nw = img.naturalWidth;
-      const nh = img.naturalHeight;
-      const srcX = (-pos.x / dw) * nw;
-      const srcY = (-pos.y / dh) * nh;
-      const srcW = (v / dw) * nw;
-      const srcH = (v / dh) * nh;
-      const canvas = document.createElement('canvas');
-      canvas.width = v;
-      canvas.height = v;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, v, v);
-      canvas.toBlob((blob) => {
-        if (!blob) { closeCropModal(); return; }
-        registerHolderBlobs[cropSlotIndex] = blob;
-        setRegisterSlotPreview(cropSlotIndex, blob);
-        const fileInput = document.querySelector('.holder-register-file[data-slot="' + cropSlotIndex + '"]');
-        if (fileInput) fileInput.value = '';
-        setStatus(registerChildStatus, 'Photo set for Holder ' + (cropSlotIndex + 1) + '.', 'success');
-        setTimeout(() => setStatus(registerChildStatus, '', ''), 1500);
-        closeCropModal();
-      }, 'image/jpeg', 0.98);
-    };
-
-    modal.addEventListener('click', function onClickOverlay(e) {
-      if (e.target === modal) {
-        modal.removeEventListener('click', onClickOverlay);
-        onUp();
-        closeCropModal();
-      }
-    });
-    modal.setAttribute('aria-hidden', 'false');
-    modal.classList.add('modal-open');
-  }
-
   document.querySelectorAll('.holder-register-file').forEach((input) => {
     const slotIndex = parseInt(input.getAttribute('data-slot'), 10);
     input.addEventListener('change', () => {
       const file = input.files && input.files[0];
       if (!file) return;
-      openCropModal(slotIndex, file);
+      registerHolderBlobs[slotIndex] = file;
+      setRegisterSlotPreview(slotIndex, file);
     });
   });
 
@@ -288,7 +160,10 @@
       e.stopPropagation();
       el.classList.remove('drag-over');
       const file = Array.from(e.dataTransfer.files || []).find((f) => f.type.startsWith('image/'));
-      if (file) openCropModal(slotIndex, file);
+      if (file) {
+        registerHolderBlobs[slotIndex] = file;
+        setRegisterSlotPreview(slotIndex, file);
+      }
     });
   });
 
@@ -379,7 +254,8 @@
         if (blob && cameraSlotIndex != null) {
           const slot = cameraSlotIndex;
           cameraSlotIndex = null;
-          openCropModal(slot, blob);
+          registerHolderBlobs[slot] = blob;
+          setRegisterSlotPreview(slot, blob);
         }
       }, 'image/jpeg', 0.9);
     });
@@ -423,7 +299,7 @@
         setStatus(registerChildStatus, json.error || 'Failed to register child.', 'error');
         return;
       }
-      setStatus(registerChildStatus, 'Child registered. Their QR appears on the QR codes tab.', 'success');
+      setStatus(registerChildStatus, 'Child registered.', 'success');
       childFullNameInput.value = '';
       childClassInput.value = '';
       childParentPhoneInput.value = '';
@@ -432,8 +308,6 @@
       holderPhoto3.value = '';
       for (let i = 0; i < 3; i++) clearRegisterSlot(i);
       await loadChildren();
-      switchTab('qr-codes');
-      qrGrid.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (err) {
       console.error(err);
       setStatus(registerChildStatus, 'Network error while registering child.', 'error');
