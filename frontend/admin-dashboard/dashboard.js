@@ -92,62 +92,9 @@
   const qrGrid = document.getElementById('qr-grid');
   const childrenTableBody = document.getElementById('children-table-body');
 
-  const MAX_PHOTO_BYTES = 1000000;
   const registerHolderBlobs = [null, null, null];
   const registerPendingUrls = [null, null, null];
   const registerPendingSource = [null, null, null];
-
-  function compressImage(fileOrBlob) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = fileOrBlob instanceof Blob ? URL.createObjectURL(fileOrBlob) : null;
-      img.onload = () => {
-        if (url) URL.revokeObjectURL(url);
-        const canvas = document.createElement('canvas');
-        let w = img.width;
-        let h = img.height;
-        const maxDim = 1200;
-        if (w > maxDim || h > maxDim) {
-          if (w > h) {
-            h = Math.round((h * maxDim) / w);
-            w = maxDim;
-          } else {
-            w = Math.round((w * maxDim) / h);
-            h = maxDim;
-          }
-        }
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        let quality = 0.88;
-        const tryBlob = () => {
-          canvas.toBlob(
-            (blob) => {
-              if (blob && blob.size <= MAX_PHOTO_BYTES) {
-                resolve(blob);
-                return;
-              }
-              if (quality <= 0.3) {
-                resolve(blob || new Blob([]));
-                return;
-              }
-              quality -= 0.15;
-              tryBlob();
-            },
-            'image/jpeg',
-            quality
-          );
-        };
-        tryBlob();
-      };
-      img.onerror = () => {
-        if (url) URL.revokeObjectURL(url);
-        reject(new Error('Failed to load image'));
-      };
-      img.src = url || fileOrBlob;
-    });
-  }
 
   function getRegisterPreviewEl(slotIndex) {
     return document.getElementById('register-holder-preview-' + slotIndex);
@@ -293,22 +240,16 @@
       canvas.height = v;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, v, v);
-      canvas.toBlob(async (blob) => {
+      canvas.toBlob((blob) => {
         if (!blob) { closeCropModal(); return; }
-        try {
-          setStatus(registerChildStatus, 'Compressing...', 'info');
-          const compressed = await compressImage(blob);
-          registerHolderBlobs[cropSlotIndex] = compressed;
-          setRegisterSlotPreview(cropSlotIndex, compressed);
-          const fileInput = document.querySelector('.holder-register-file[data-slot="' + cropSlotIndex + '"]');
-          if (fileInput) fileInput.value = '';
-          setStatus(registerChildStatus, 'Photo set for Holder ' + (cropSlotIndex + 1) + '.', 'success');
-          setTimeout(() => setStatus(registerChildStatus, '', ''), 1500);
-        } catch (e) {
-          setStatus(registerChildStatus, 'Failed to process photo.', 'error');
-        }
+        registerHolderBlobs[cropSlotIndex] = blob;
+        setRegisterSlotPreview(cropSlotIndex, blob);
+        const fileInput = document.querySelector('.holder-register-file[data-slot="' + cropSlotIndex + '"]');
+        if (fileInput) fileInput.value = '';
+        setStatus(registerChildStatus, 'Photo set for Holder ' + (cropSlotIndex + 1) + '.', 'success');
+        setTimeout(() => setStatus(registerChildStatus, '', ''), 1500);
         closeCropModal();
-      }, 'image/jpeg', 0.9);
+      }, 'image/jpeg', 0.98);
     };
 
     modal.addEventListener('click', function onClickOverlay(e) {
@@ -356,9 +297,13 @@
     btn.addEventListener('click', async () => {
       const source = registerPendingSource[slotIndex];
       if (!source) return;
-      setStatus(registerChildStatus, 'Compressing...', 'info');
       try {
-        const blob = await compressImage(source);
+        const blob = source instanceof Blob ? source : await new Promise((res, rej) => {
+          const r = new FileReader();
+          r.onload = () => res(new Blob([r.result], { type: (source.type || 'image/jpeg') }));
+          r.onerror = rej;
+          r.readAsArrayBuffer(source);
+        });
         registerHolderBlobs[slotIndex] = blob;
         setRegisterSlotPreview(slotIndex, blob);
         registerPendingSource[slotIndex] = null;
