@@ -1008,6 +1008,12 @@ html[data-theme="dark"] .btn-remove-photo {
   overflow: auto;
 }
 
+.qr-codes-card .qr-grid-wrap {
+  max-height: 320px;
+  overflow: auto;
+  margin-top: 0.5rem;
+}
+
 .history-toolbar {
   display: flex;
   flex-wrap: wrap;

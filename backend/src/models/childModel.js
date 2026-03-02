@@ -1,11 +1,28 @@
 const { query } = require('../utils/db');
 
+/** Returns the smallest positive integer not used as a child id (reuses ids of deleted children). */
+async function getNextAvailableChildId() {
+  const { rows } = await query('SELECT id FROM children ORDER BY id ASC', []);
+  let next = 1;
+  for (const row of rows) {
+    const id = Number(row.id);
+    if (id === next) next += 1;
+    else break;
+  }
+  return next;
+}
+
 async function createChild({ externalId, firstName, lastName, className, guardianPhone }) {
+  const nextId = await getNextAvailableChildId();
   const { rows } = await query(
-    `INSERT INTO children (external_id, first_name, last_name, class_name, guardian_phone)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO children (id, external_id, first_name, last_name, class_name, guardian_phone)
+     VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING *`,
-    [externalId, firstName, lastName, className, guardianPhone]
+    [nextId, externalId, firstName, lastName, className, guardianPhone]
+  );
+  await query(
+    `SELECT setval(pg_get_serial_sequence('children', 'id'), (SELECT COALESCE(MAX(id), 1) FROM children))`,
+    []
   );
   return rows[0];
 }
